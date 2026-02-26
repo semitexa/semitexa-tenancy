@@ -28,8 +28,8 @@ final class TenantResolverChainTest extends TestCase
     public function returns_first_non_null_result(): void
     {
         $first = $this->createStrategy(null);
-        $second = $this->createStrategy(new TenantContext('acme', 'header', 'X-Tenant-ID'));
-        $third = $this->createStrategy(new TenantContext('globex', 'query', 'globex'));
+        $second = $this->createStrategy(TenantContext::fromResolution('acme', 'header', 'X-Tenant-ID'));
+        $third = $this->createStrategy(TenantContext::fromResolution('globex', 'query', 'globex'));
 
         $chain = new TenantResolverChain([$first, $second, $third]);
         $context = $chain->resolve($this->makeRequest());
@@ -54,7 +54,7 @@ final class TenantResolverChainTest extends TestCase
     #[Test]
     public function returns_result_from_single_strategy(): void
     {
-        $strategy = $this->createStrategy(new TenantContext('acme', 'subdomain', 'acme.example.com'));
+        $strategy = $this->createStrategy(TenantContext::fromResolution('acme', 'subdomain', 'acme.example.com'));
 
         $chain = new TenantResolverChain([$strategy]);
         $context = $chain->resolve($this->makeRequest());
@@ -73,7 +73,7 @@ final class TenantResolverChainTest extends TestCase
             public function resolve(Request $request): ?TenantContext
             {
                 $this->callCount++;
-                return new TenantContext('acme', 'header', 'value');
+                return TenantContext::fromResolution('acme', 'header', 'value');
             }
         };
 
@@ -82,7 +82,7 @@ final class TenantResolverChainTest extends TestCase
             public function resolve(Request $request): ?TenantContext
             {
                 $this->callCount++;
-                return new TenantContext('globex', 'query', 'value');
+                return TenantContext::fromResolution('globex', 'query', 'value');
             }
         };
 

@@ -44,7 +44,7 @@ final class TenantRequiredGuardTest extends TestCase
     #[Test]
     public function returns_null_when_tenant_is_present(): void
     {
-        CoroutineContextStore::setFallback(new TenantContext('acme', 'header'));
+        CoroutineContextStore::setFallback(TenantContext::fromResolution('acme', 'header'));
 
         $guard = new TenantRequiredGuard();
 

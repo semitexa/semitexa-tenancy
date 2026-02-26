@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\CLI;
 
+use Semitexa\Core\Attributes\AsCommand;
 use Semitexa\Core\Console\Command\BaseCommand;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
 use Semitexa\Tenancy\TenancyBootstrapper;
@@ -12,6 +13,7 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+#[AsCommand(name: 'tenant:list', description: 'List all registered tenants')]
 class TenantListCommand extends BaseCommand
 {
     private TenantRepositoryInterface $repository;

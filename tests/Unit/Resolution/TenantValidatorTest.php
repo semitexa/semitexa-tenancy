@@ -36,7 +36,7 @@ final class TenantValidatorTest extends TestCase
             ->willReturn($tenant);
 
         $validator = new TenantValidator($repository);
-        $context = new TenantContext('acme', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('acme', 'header', 'X-Tenant-ID');
 
         $result = $validator->validate($context);
 
@@ -52,7 +52,7 @@ final class TenantValidatorTest extends TestCase
             ->willReturn(null);
 
         $validator = new TenantValidator($repository);
-        $context = new TenantContext('unknown', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('unknown', 'header', 'X-Tenant-ID');
 
         $this->assertNull($validator->validate($context));
     }
@@ -66,7 +66,7 @@ final class TenantValidatorTest extends TestCase
             ->willReturn(null);
 
         $validator = new TenantValidator($repository);
-        $context = new TenantContext('suspended-tenant', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('suspended-tenant', 'header', 'X-Tenant-ID');
 
         $this->assertNull($validator->validate($context));
     }

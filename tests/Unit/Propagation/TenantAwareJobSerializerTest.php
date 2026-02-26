@@ -20,7 +20,7 @@ final class TenantAwareJobSerializerTest extends TestCase
     #[Test]
     public function wrap_adds_tenant_to_payload(): void
     {
-        CoroutineContextStore::setFallback(new TenantContext('acme', 'header', 'X-Tenant-ID'));
+        CoroutineContextStore::setFallback(TenantContext::fromResolution('acme', 'header', 'X-Tenant-ID'));
 
         $payload = ['action' => 'sync', 'data' => [1, 2, 3]];
         $wrapped = TenantAwareJobSerializer::wrap($payload);
@@ -121,7 +121,7 @@ final class TenantAwareJobSerializerTest extends TestCase
     #[Test]
     public function roundtrip_wrap_unwrap(): void
     {
-        CoroutineContextStore::setFallback(new TenantContext('acme', 'path', '/acme'));
+        CoroutineContextStore::setFallback(TenantContext::fromResolution('acme', 'path', '/acme'));
 
         $original = ['key' => 'value', 'nested' => ['a' => 1]];
         $wrapped = TenantAwareJobSerializer::wrap($original);

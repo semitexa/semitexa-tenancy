@@ -32,7 +32,7 @@ final class TenantContextTest extends TestCase
     #[Test]
     public function is_default_returns_false_for_real_tenant(): void
     {
-        $context = new TenantContext('tenant-1', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('tenant-1', 'header', 'X-Tenant-ID');
 
         $this->assertFalse($context->isDefault());
     }
@@ -40,7 +40,7 @@ final class TenantContextTest extends TestCase
     #[Test]
     public function require_tenant_id_returns_id_for_real_tenant(): void
     {
-        $context = new TenantContext('tenant-1', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('tenant-1', 'header', 'X-Tenant-ID');
 
         $this->assertSame('tenant-1', $context->requireTenantId());
     }
@@ -66,7 +66,7 @@ final class TenantContextTest extends TestCase
     #[Test]
     public function for_serialization_returns_array_for_real_tenant(): void
     {
-        $context = new TenantContext('tenant-1', 'subdomain', 'tenant-1.example.com');
+        $context = TenantContext::fromResolution('tenant-1', 'subdomain', 'tenant-1.example.com');
 
         $result = $context->forSerialization();
 
@@ -107,7 +107,7 @@ final class TenantContextTest extends TestCase
     #[Test]
     public function context_is_readonly(): void
     {
-        $context = new TenantContext('tenant-1', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('tenant-1', 'header', 'X-Tenant-ID');
 
         $this->assertSame('tenant-1', $context->tenantId);
         $this->assertSame('header', $context->strategy);

@@ -28,7 +28,7 @@ final class TenantResolverHandlerTest extends TestCase
     #[Test]
     public function resolves_and_stores_active_tenant(): void
     {
-        $context = new TenantContext('acme', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('acme', 'header', 'X-Tenant-ID');
         $tenant = new Tenant('acme', 'Acme Corp', TenantStatus::Active);
 
         $resolver = $this->createMock(TenantResolverInterface::class);
@@ -49,7 +49,7 @@ final class TenantResolverHandlerTest extends TestCase
     #[Test]
     public function returns_404_when_tenant_not_found(): void
     {
-        $context = new TenantContext('unknown', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('unknown', 'header', 'X-Tenant-ID');
 
         $resolver = $this->createMock(TenantResolverInterface::class);
         $resolver->method('resolve')->willReturn($context);
@@ -67,7 +67,7 @@ final class TenantResolverHandlerTest extends TestCase
     #[Test]
     public function returns_404_when_tenant_is_suspended(): void
     {
-        $context = new TenantContext('suspended', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('suspended', 'header', 'X-Tenant-ID');
 
         $resolver = $this->createMock(TenantResolverInterface::class);
         $resolver->method('resolve')->willReturn($context);
@@ -118,7 +118,7 @@ final class TenantResolverHandlerTest extends TestCase
     #[Test]
     public function dispatches_tenant_resolved_event(): void
     {
-        $context = new TenantContext('acme', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('acme', 'header', 'X-Tenant-ID');
         $tenant = new Tenant('acme', 'Acme Corp', TenantStatus::Active);
 
         $resolver = $this->createMock(TenantResolverInterface::class);
@@ -143,7 +143,7 @@ final class TenantResolverHandlerTest extends TestCase
     #[Test]
     public function dispatches_tenant_not_found_event(): void
     {
-        $context = new TenantContext('unknown', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('unknown', 'header', 'X-Tenant-ID');
 
         $resolver = $this->createMock(TenantResolverInterface::class);
         $resolver->method('resolve')->willReturn($context);
@@ -187,7 +187,7 @@ final class TenantResolverHandlerTest extends TestCase
     #[Test]
     public function works_without_event_dispatcher(): void
     {
-        $context = new TenantContext('acme', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('acme', 'header', 'X-Tenant-ID');
         $tenant = new Tenant('acme', 'Acme Corp', TenantStatus::Active);
 
         $resolver = $this->createMock(TenantResolverInterface::class);

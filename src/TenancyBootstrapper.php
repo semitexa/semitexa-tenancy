@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy;
 
+use Semitexa\Core\Discovery\ClassDiscovery;
 use Semitexa\Core\Event\EventDispatcherInterface;
+use Semitexa\Tenancy\Attribute\AsTenancyLayersProvider;
+use Semitexa\Tenancy\Definition\LayerDefinition;
 use Semitexa\Tenancy\Handler\TenantResolverHandler;
 use Semitexa\Tenancy\Identification\ConfigTenantRepository;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
+use Semitexa\Tenancy\Resolution\MultilayerTenantResolver;
 use Semitexa\Tenancy\Resolution\TenantResolverChain;
 use Semitexa\Tenancy\Resolution\TenantResolverInterface;
 use Semitexa\Tenancy\Resolution\Strategy\HeaderStrategy;
@@ -65,6 +69,11 @@ final class TenancyBootstrapper
 
     private function buildResolver(): TenantResolverInterface
     {
+        $layerDefinitions = $this->discoverLayerDefinitions();
+        if ($layerDefinitions !== []) {
+            return new MultilayerTenantResolver($layerDefinitions);
+        }
+
         $strategyNames = array_filter(
             array_map('trim', explode(',', self::env('TENANCY_STRATEGY', 'header'))),
         );
@@ -80,6 +89,43 @@ final class TenancyBootstrapper
         }
 
         return new TenantResolverChain($strategies);
+    }
+
+    /**
+     * Discover TenancyLayersProvider classes and collect all layer definitions.
+     *
+     * @return LayerDefinition[]
+     */
+    private function discoverLayerDefinitions(): array
+    {
+        if (!class_exists(ClassDiscovery::class)) {
+            return [];
+        }
+
+        ClassDiscovery::initialize();
+        $providerClasses = ClassDiscovery::findClassesWithAttribute(AsTenancyLayersProvider::class);
+        $definitions = [];
+
+        foreach ($providerClasses as $class) {
+            if (!method_exists($class, 'layers')) {
+                continue;
+            }
+            try {
+                $provider = new $class();
+                $layers = $provider->layers();
+                if (is_array($layers)) {
+                    foreach ($layers as $def) {
+                        if ($def instanceof LayerDefinition) {
+                            $definitions[] = $def;
+                        }
+                    }
+                }
+            } catch (\Throwable) {
+                continue;
+            }
+        }
+
+        return $definitions;
     }
 
     private function buildStrategy(string $name): ?TenantResolverStrategy

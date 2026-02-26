@@ -52,6 +52,6 @@ final class SubdomainStrategy implements TenantResolverStrategy
             return null;
         }
 
-        return new TenantContext($tenantId, 'subdomain', $host);
+        return TenantContext::fromResolution($tenantId, 'subdomain', $host);
     }
 }

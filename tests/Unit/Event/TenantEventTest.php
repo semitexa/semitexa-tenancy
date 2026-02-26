@@ -18,7 +18,7 @@ final class TenantEventTest extends TestCase
     #[Test]
     public function tenant_resolved_holds_context_and_tenant(): void
     {
-        $context = new TenantContext('acme', 'header');
+        $context = TenantContext::fromResolution('acme', 'header');
         $tenant = new Tenant('acme', 'Acme Corp', TenantStatus::Active);
 
         $event = new TenantResolved($context, $tenant);
@@ -40,7 +40,7 @@ final class TenantEventTest extends TestCase
     #[Test]
     public function tenant_not_found_holds_context(): void
     {
-        $context = new TenantContext('unknown', 'header');
+        $context = TenantContext::fromResolution('unknown', 'header');
 
         $event = new TenantNotFound($context);
 
@@ -50,8 +50,8 @@ final class TenantEventTest extends TestCase
     #[Test]
     public function tenant_switched_holds_previous_and_current(): void
     {
-        $previous = new TenantContext('acme', 'cli');
-        $current = new TenantContext('globex', 'cli');
+        $previous = TenantContext::fromResolution('acme', 'cli');
+        $current = TenantContext::fromResolution('globex', 'cli');
 
         $event = new TenantSwitched($previous, $current);
 

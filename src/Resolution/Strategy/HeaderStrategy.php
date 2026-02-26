@@ -28,7 +28,7 @@ final class HeaderStrategy implements TenantResolverStrategy
             return null;
         }
 
-        return new TenantContext($tenantId, 'header', $value);
+        return TenantContext::fromResolution($tenantId, 'header', $value);
     }
 
     private function sanitize(string $value): ?string

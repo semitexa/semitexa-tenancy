@@ -30,7 +30,7 @@ final class CoroutineContextStoreTest extends TestCase
     #[Test]
     public function set_fallback_stores_context(): void
     {
-        $context = new TenantContext('tenant-1', 'header', 'X-Tenant-ID');
+        $context = TenantContext::fromResolution('tenant-1', 'header', 'X-Tenant-ID');
 
         CoroutineContextStore::setFallback($context);
 
@@ -40,7 +40,7 @@ final class CoroutineContextStoreTest extends TestCase
     #[Test]
     public function clear_fallback_removes_context(): void
     {
-        CoroutineContextStore::setFallback(new TenantContext('tenant-1', 'header'));
+        CoroutineContextStore::setFallback(TenantContext::fromResolution('tenant-1', 'header'));
 
         CoroutineContextStore::clearFallback();
 
@@ -58,7 +58,7 @@ final class CoroutineContextStoreTest extends TestCase
     #[Test]
     public function get_or_fail_returns_context_when_set(): void
     {
-        $context = new TenantContext('tenant-1', 'header');
+        $context = TenantContext::fromResolution('tenant-1', 'header');
 
         CoroutineContextStore::setFallback($context);
 
@@ -68,7 +68,7 @@ final class CoroutineContextStoreTest extends TestCase
     #[Test]
     public function set_uses_fallback_outside_coroutine(): void
     {
-        $context = new TenantContext('tenant-1', 'header');
+        $context = TenantContext::fromResolution('tenant-1', 'header');
 
         CoroutineContextStore::set($context);
 
@@ -78,8 +78,8 @@ final class CoroutineContextStoreTest extends TestCase
     #[Test]
     public function set_allows_multiple_calls_outside_coroutine(): void
     {
-        $first = new TenantContext('tenant-1', 'header');
-        $second = new TenantContext('tenant-2', 'subdomain');
+        $first = TenantContext::fromResolution('tenant-1', 'header');
+        $second = TenantContext::fromResolution('tenant-2', 'subdomain');
 
         CoroutineContextStore::set($first);
         CoroutineContextStore::set($second);

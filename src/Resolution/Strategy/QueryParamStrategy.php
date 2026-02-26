@@ -28,7 +28,7 @@ final class QueryParamStrategy implements TenantResolverStrategy
             return null;
         }
 
-        return new TenantContext($tenantId, 'query', $value);
+        return TenantContext::fromResolution($tenantId, 'query', $value);
     }
 
     private function sanitize(string $value): ?string

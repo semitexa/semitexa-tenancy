@@ -69,6 +69,38 @@ final class TenantContext implements TenantContextInterface
         );
     }
 
+    /**
+     * Create context from single-tenant resolution (env-based strategies).
+     * Use this when resolving tenant from header/path/subdomain/query.
+     */
+    public static function fromResolution(string $tenantId, string $strategy, ?string $source = null): self
+    {
+        $context = new self(new OrganizationValue($tenantId));
+        $context->strategy = $strategy;
+        $context->source = $source ?? $strategy;
+        return $context;
+    }
+
+    /**
+     * Organization layer value (tenant id) for backward compatibility.
+     * Prefer getLayer(OrganizationLayer())->rawValue() in new code.
+     */
+    public function getTenantId(): string
+    {
+        $org = $this->getLayer(new OrganizationLayer());
+        return $org !== null ? $org->rawValue() : 'default';
+    }
+
+    public function __get(string $name): mixed
+    {
+        return match ($name) {
+            'tenantId' => $this->getTenantId(),
+            'strategy' => $this->strategy,
+            'source' => $this->source,
+            default => throw new \InvalidArgumentException("Unknown property: {$name}"),
+        };
+    }
+
     public static function fromQueuePayload(array $payload): self
     {
         $layers = [];
@@ -104,7 +136,11 @@ final class TenantContext implements TenantContextInterface
 
     public function isDefault(): bool
     {
-        return empty($this->layers);
+        $orgLayer = new OrganizationLayer();
+        if (!$this->hasLayer($orgLayer)) {
+            return true;
+        }
+        return $this->getLayer($orgLayer)->rawValue() === 'default';
     }
 
     public function requireTenantId(): string
@@ -124,23 +160,23 @@ final class TenantContext implements TenantContextInterface
             return null;
         }
 
-        $data = [
-            'strategy' => $this->strategy,
-        ];
+        $data = [];
 
-        $org = $this->getLayer(new OrganizationLayer());
-        if ($org !== null) {
-            $data['tenantId'] = $org->rawValue();
+        $orgLayer = new OrganizationLayer();
+        if ($this->hasLayer($orgLayer)) {
+            $data['tenantId'] = $this->getLayer($orgLayer)->rawValue();
         }
 
-        $locale = $this->getLayer(new LocaleLayer());
-        if ($locale !== null) {
-            $data['locale'] = $locale->rawValue();
+        $data['strategy'] = $this->strategy;
+
+        $localeLayer = new LocaleLayer();
+        if ($this->hasLayer($localeLayer)) {
+            $data['locale'] = $this->getLayer($localeLayer)->rawValue();
         }
 
-        $env = $this->getLayer(new EnvironmentLayer());
-        if ($env !== null) {
-            $data['environment'] = $env->rawValue();
+        $envLayer = new EnvironmentLayer();
+        if ($this->hasLayer($envLayer)) {
+            $data['environment'] = $this->getLayer($envLayer)->rawValue();
         }
 
         return $data;

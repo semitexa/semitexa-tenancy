@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\CLI;
 
+use Semitexa\Core\Attributes\AsCommand;
 use Semitexa\Core\Console\Command\BaseCommand;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
 use Semitexa\Tenancy\Context\TenantContext;
@@ -23,6 +24,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
  *   bin/semitexa tenant:run acme cache:clear
  *   bin/semitexa tenant:run globex queue:work
  */
+#[AsCommand(name: 'tenant:run', description: 'Execute a command in a specific tenant context')]
 class TenantRunCommand extends BaseCommand
 {
     private TenantRepositoryInterface $repository;
@@ -57,7 +59,7 @@ class TenantRunCommand extends BaseCommand
         }
 
         // Set tenant context for the CLI session
-        $context = new TenantContext($tenantId, 'cli', 'tenant:run');
+        $context = TenantContext::fromResolution($tenantId, 'cli', 'tenant:run');
         CoroutineContextStore::setFallback($context);
 
         $io->text(sprintf('Running in tenant context: %s (%s)', $tenant->name, $tenant->id));
