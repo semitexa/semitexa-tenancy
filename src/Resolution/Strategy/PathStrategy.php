@@ -9,9 +9,9 @@ use Semitexa\Tenancy\Context\TenantContext;
 
 final class PathStrategy implements TenantResolverStrategy
 {
-    /** @param string[] $excludedPrefixes Segments that are NOT tenant identifiers */
+    /** @param string[] $prefixes Segments that ARE tenant/locale identifiers (allowlist mode) */
     public function __construct(
-        private readonly array $excludedPrefixes = [],
+        private readonly array $prefixes = [],
     ) {}
 
     public function resolve(Request $request): ?TenantContext
@@ -25,7 +25,11 @@ final class PathStrategy implements TenantResolverStrategy
         $segments = explode('/', $path, 2);
         $firstSegment = $segments[0];
 
-        if ($firstSegment === '' || in_array($firstSegment, $this->excludedPrefixes, true)) {
+        if ($firstSegment === '') {
+            return null;
+        }
+
+        if ($this->prefixes !== [] && !in_array($firstSegment, $this->prefixes, true)) {
             return null;
         }
 
