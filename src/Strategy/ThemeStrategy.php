@@ -9,9 +9,10 @@ use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
 use Semitexa\Core\Tenant\Layer\ThemeLayer;
 use Semitexa\Core\Tenant\Layer\ThemeValue;
+use Semitexa\Core\Tenant\TenantLayerStrategyInterface;
 use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
 
-class ThemeStrategy
+class ThemeStrategy implements TenantLayerStrategyInterface
 {
     public function __construct(
         private readonly TenantResolverStrategy $resolver,

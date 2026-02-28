@@ -9,9 +9,10 @@ use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
 use Semitexa\Core\Tenant\Layer\LocaleValue;
+use Semitexa\Core\Tenant\TenantLayerStrategyInterface;
 use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
 
-class LocaleStrategy
+class LocaleStrategy implements TenantLayerStrategyInterface
 {
     public function __construct(
         private readonly TenantResolverStrategy $resolver,

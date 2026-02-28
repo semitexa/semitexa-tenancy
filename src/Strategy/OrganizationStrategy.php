@@ -9,10 +9,11 @@ use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
 use Semitexa\Core\Tenant\Layer\OrganizationLayer;
 use Semitexa\Core\Tenant\Layer\OrganizationValue;
+use Semitexa\Core\Tenant\TenantLayerStrategyInterface;
 use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
 use Semitexa\Tenancy\Context\TenantContext;
 
-class OrganizationStrategy
+class OrganizationStrategy implements TenantLayerStrategyInterface
 {
     public function __construct(
         private readonly TenantResolverStrategy $resolver,
