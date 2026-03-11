@@ -23,12 +23,17 @@ use Semitexa\Tenancy\Resolution\TenantResolverInterface;
  */
 final class TenantResolverHandler
 {
+    private readonly TenantErrorResponderInterface $responder;
+
     public function __construct(
         private readonly TenantResolverInterface $resolver,
         private readonly TenantRepositoryInterface $tenants,
         private readonly ?EventDispatcherInterface $events = null,
         private readonly bool $requireTenant = false,
-    ) {}
+        ?TenantErrorResponderInterface $responder = null,
+    ) {
+        $this->responder = $responder ?? new DefaultTenantErrorResponder();
+    }
 
     /**
      * Resolve and store tenant context for the current request.
@@ -45,9 +50,7 @@ final class TenantResolverHandler
             if ($tenant === null) {
                 $this->events?->dispatch(new TenantNotFound($context));
 
-                return Response::json([
-                    'error' => 'Tenant not found or inactive',
-                ], 404);
+                return $this->responder->tenantNotFound($context);
             }
 
             CoroutineContextStore::set($context);
@@ -57,9 +60,7 @@ final class TenantResolverHandler
         }
 
         if ($this->requireTenant) {
-            return Response::json([
-                'error' => 'Tenant identification required',
-            ], 400);
+            return $this->responder->tenantRequired();
         }
 
         CoroutineContextStore::set($context);

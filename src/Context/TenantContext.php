@@ -8,6 +8,7 @@ use Semitexa\Core\Tenant\TenantContextInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
 use Semitexa\Tenancy\Exception\TenantRequiredException;
+use Semitexa\Tenancy\Support\EnvReader;
 use Semitexa\Core\Tenant\Layer\OrganizationLayer;
 use Semitexa\Core\Tenant\Layer\OrganizationValue;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
@@ -62,10 +63,13 @@ final class TenantContext implements TenantContextInterface
 
     public static function default(): self
     {
+        $locale = EnvReader::get('TENANCY_DEFAULT_LOCALE');
+        $environment = EnvReader::get('TENANCY_DEFAULT_ENVIRONMENT');
+
         return new self(
             new OrganizationValue('default', 'Default Organization'),
-            LocaleValue::default(),
-            EnvironmentValue::prod(),
+            $locale !== '' ? (LocaleValue::fromCode($locale) ?? LocaleValue::default()) : LocaleValue::default(),
+            $environment !== '' ? EnvironmentValue::fromValue($environment) : EnvironmentValue::prod(),
         );
     }
 

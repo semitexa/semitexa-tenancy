@@ -6,6 +6,7 @@ namespace Semitexa\Tenancy\Resolution\Strategy;
 
 use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Tenancy\Support\TenantIdSanitizer;
 
 final class SubdomainStrategy implements TenantResolverStrategy
 {
@@ -46,9 +47,9 @@ final class SubdomainStrategy implements TenantResolverStrategy
             return null;
         }
 
-        $tenantId = preg_replace('/[^a-zA-Z0-9_-]/', '', $subdomain);
+        $tenantId = TenantIdSanitizer::sanitize($subdomain);
 
-        if ($tenantId === '') {
+        if ($tenantId === null) {
             return null;
         }
 
