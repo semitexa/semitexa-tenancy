@@ -42,6 +42,6 @@ class LayerStrategyAdapter implements TenantLayerStrategyInterface
             return null;
         }
 
-        return ($this->valueFactory)($context->tenantId);
+        return ($this->valueFactory)($context->getTenantId());
     }
 }
