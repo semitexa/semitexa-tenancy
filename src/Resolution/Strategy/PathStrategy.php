@@ -6,6 +6,7 @@ namespace Semitexa\Tenancy\Resolution\Strategy;
 
 use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Tenancy\Support\TenantIdSanitizer;
 
 final class PathStrategy implements TenantResolverStrategy
 {
@@ -15,6 +16,22 @@ final class PathStrategy implements TenantResolverStrategy
         private readonly array $prefixes = [],
         private readonly array $excludedPrefixes = [],
     ) {}
+
+    /**
+     * Create a PathStrategy that only resolves the given segments as tenant identifiers.
+     */
+    public static function allowOnly(array $prefixes): self
+    {
+        return new self(prefixes: $prefixes);
+    }
+
+    /**
+     * Create a PathStrategy that resolves all segments except the given ones.
+     */
+    public static function excludeOnly(array $excludedPrefixes): self
+    {
+        return new self(excludedPrefixes: $excludedPrefixes);
+    }
 
     public function resolve(Request $request): ?TenantContext
     {
@@ -39,9 +56,9 @@ final class PathStrategy implements TenantResolverStrategy
             return null;
         }
 
-        $tenantId = preg_replace('/[^a-zA-Z0-9_-]/', '', $firstSegment);
+        $tenantId = TenantIdSanitizer::sanitize($firstSegment);
 
-        if ($tenantId === '') {
+        if ($tenantId === null) {
             return null;
         }
 

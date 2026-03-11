@@ -6,8 +6,10 @@ namespace Semitexa\Tenancy\CLI;
 
 use Semitexa\Core\Attributes\AsCommand;
 use Semitexa\Core\Console\Command\BaseCommand;
+use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
 use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Tenancy\Event\TenantSwitched;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
 use Semitexa\Tenancy\TenancyBootstrapper;
 use Symfony\Component\Console\Command\Command;
@@ -28,11 +30,15 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class TenantRunCommand extends BaseCommand
 {
     private TenantRepositoryInterface $repository;
+    private ?EventDispatcherInterface $events;
 
-    public function __construct(?TenantRepositoryInterface $repository = null)
-    {
+    public function __construct(
+        ?TenantRepositoryInterface $repository = null,
+        ?EventDispatcherInterface $events = null,
+    ) {
         parent::__construct();
         $this->repository = $repository ?? (new TenancyBootstrapper())->getRepository();
+        $this->events = $events;
     }
 
     protected function configure(): void
@@ -58,9 +64,14 @@ class TenantRunCommand extends BaseCommand
             return Command::FAILURE;
         }
 
-        // Set tenant context for the CLI session
+        // Set tenant context for the CLI session, preserving previous
         $context = TenantContext::fromResolution($tenantId, 'cli', 'tenant:run');
-        CoroutineContextStore::setFallback($context);
+        $previous = CoroutineContextStore::swapFallback($context);
+
+        $this->events?->dispatch(new TenantSwitched(
+            previous: $previous ?? TenantContext::default(),
+            current: $context,
+        ));
 
         $io->text(sprintf('Running in tenant context: %s (%s)', $tenant->name, $tenant->id));
 
@@ -76,7 +87,12 @@ class TenantRunCommand extends BaseCommand
 
             return $application->run($commandInput, $output);
         } finally {
-            CoroutineContextStore::clearFallback();
+            CoroutineContextStore::swapFallback($previous);
+
+            $this->events?->dispatch(new TenantSwitched(
+                previous: $context,
+                current: $previous ?? TenantContext::default(),
+            ));
         }
     }
 }

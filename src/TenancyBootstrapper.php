@@ -19,6 +19,7 @@ use Semitexa\Tenancy\Resolution\Strategy\PathStrategy;
 use Semitexa\Tenancy\Resolution\Strategy\QueryParamStrategy;
 use Semitexa\Tenancy\Resolution\Strategy\SubdomainStrategy;
 use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
+use Semitexa\Tenancy\Support\EnvReader;
 
 /**
  * Builds the tenancy handler from environment configuration.
@@ -35,7 +36,7 @@ final class TenancyBootstrapper
 
     public function __construct(?EventDispatcherInterface $events = null)
     {
-        $this->enabled = self::env('TENANCY_ENABLED', 'false') === 'true';
+        $this->enabled = EnvReader::getBool('TENANCY_ENABLED');
 
         $this->repository = $this->buildRepository();
         $this->resolver = $this->buildResolver();
@@ -43,7 +44,7 @@ final class TenancyBootstrapper
             resolver: $this->resolver,
             tenants: $this->repository,
             events: $events,
-            requireTenant: self::env('TENANCY_REQUIRED', 'false') === 'true',
+            requireTenant: EnvReader::getBool('TENANCY_REQUIRED'),
         );
     }
 
@@ -75,7 +76,7 @@ final class TenancyBootstrapper
         }
 
         $strategyNames = array_filter(
-            array_map('trim', explode(',', self::env('TENANCY_STRATEGY', 'header'))),
+            array_map('trim', explode(',', EnvReader::get('TENANCY_STRATEGY', 'header'))),
         );
 
         $strategies = [];
@@ -132,16 +133,16 @@ final class TenancyBootstrapper
     {
         return match ($name) {
             'header' => new HeaderStrategy(
-                headerName: self::env('TENANCY_HEADER_NAME', 'X-Tenant-ID'),
+                headerName: EnvReader::get('TENANCY_HEADER_NAME', 'X-Tenant-ID'),
             ),
             'subdomain' => $this->buildSubdomainStrategy(),
             'path' => new PathStrategy(
                 excludedPrefixes: array_filter(
-                    array_map('trim', explode(',', self::env('TENANCY_PATH_EXCLUDED', ''))),
+                    array_map('trim', explode(',', EnvReader::get('TENANCY_PATH_EXCLUDED'))),
                 ),
             ),
             'query' => new QueryParamStrategy(
-                paramName: self::env('TENANCY_QUERY_PARAM', 'tenant'),
+                paramName: EnvReader::get('TENANCY_QUERY_PARAM', 'tenant'),
             ),
             default => null,
         };
@@ -149,7 +150,7 @@ final class TenancyBootstrapper
 
     private function buildSubdomainStrategy(): ?SubdomainStrategy
     {
-        $baseDomain = self::env('TENANCY_BASE_DOMAIN', '');
+        $baseDomain = EnvReader::get('TENANCY_BASE_DOMAIN');
 
         if ($baseDomain === '') {
             return null;
@@ -162,67 +163,16 @@ final class TenancyBootstrapper
     {
         $config = [];
 
-        $compact = self::env('TENANTS', '');
+        $compact = EnvReader::get('TENANTS');
         if ($compact !== '') {
             $config['tenants_compact'] = $compact;
         }
 
-        // Scan for TENANT_{ID}_NAME / TENANT_{ID}_STATUS pattern
-        $detailed = $this->scanDetailedTenants();
+        $detailed = EnvReader::scanDetailedTenants();
         if ($detailed !== []) {
             $config['tenants'] = $detailed;
         }
 
         return new ConfigTenantRepository($config);
-    }
-
-    /**
-     * Scan environment for TENANT_{ID}_NAME / TENANT_{ID}_STATUS patterns.
-     *
-     * @return array<string, array{name?: string, status?: string}>
-     */
-    private function scanDetailedTenants(): array
-    {
-        $tenants = [];
-
-        // Check $_ENV, $_SERVER, and .env file for TENANT_*_NAME keys
-        $sources = array_merge(
-            getenv() ?: [],
-            $_ENV,
-            $_SERVER,
-        );
-
-        foreach ($sources as $key => $value) {
-            if (!is_string($key) || !str_starts_with($key, 'TENANT_') || $key === 'TENANT_STRATEGY' || $key === 'TENANT_HEADER' || $key === 'TENANT_DEFAULT') {
-                continue;
-            }
-
-            // Match TENANT_{ID}_NAME or TENANT_{ID}_STATUS
-            if (preg_match('/^TENANT_([A-Z0-9_]+?)_(NAME|STATUS)$/', $key, $matches)) {
-                $id = strtolower($matches[1]);
-                $field = strtolower($matches[2]);
-                $tenants[$id][$field] = (string) $value;
-            }
-        }
-
-        return $tenants;
-    }
-
-    private static function env(string $key, string $default): string
-    {
-        $value = getenv($key);
-        if ($value !== false) {
-            return $value;
-        }
-
-        if (isset($_ENV[$key])) {
-            return $_ENV[$key];
-        }
-
-        if (isset($_SERVER[$key])) {
-            return $_SERVER[$key];
-        }
-
-        return $default;
     }
 }

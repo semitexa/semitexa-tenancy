@@ -15,6 +15,7 @@ use Semitexa\Tenancy\Resolution\Strategy\HeaderStrategy;
 use Semitexa\Tenancy\Strategy\OrganizationStrategy;
 use Semitexa\Tenancy\Strategy\LocaleStrategy;
 use Semitexa\Tenancy\Strategy\EnvironmentStrategy;
+use Semitexa\Tenancy\Support\EnvReader;
 
 #[AsTenancyLayersProvider]
 class TenancyLayersProvider
@@ -45,17 +46,17 @@ class TenancyLayersProvider
 
     private function getBaseDomain(): string
     {
-        return getenv('TENANCY_BASE_DOMAIN') ?: $_ENV['TENANCY_BASE_DOMAIN'] ?? '';
+        return EnvReader::get('TENANCY_BASE_DOMAIN');
     }
 
     private function getLocalePrefixes(): array
     {
-        $prefixes = getenv('TENANCY_LOCALE_PREFIXES') ?: $_ENV['TENANCY_LOCALE_PREFIXES'] ?? '';
-        
+        $prefixes = EnvReader::get('TENANCY_LOCALE_PREFIXES');
+
         if ($prefixes === '') {
             return ['en', 'uk', 'de', 'pl', 'ru'];
         }
-        
+
         return array_filter(array_map('trim', explode(',', $prefixes)));
     }
 }

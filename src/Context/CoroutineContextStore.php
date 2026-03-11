@@ -8,7 +8,7 @@ use Semitexa\Tenancy\Exception\TenantContextImmutableException;
 use Semitexa\Tenancy\Exception\TenantRequiredException;
 use Swoole\Coroutine;
 
-final class CoroutineContextStore
+final class CoroutineContextStore implements ContextStoreInterface
 {
     private const CONTEXT_KEY = '__tenant_context';
     private const LOCK_KEY = '__tenant_context_locked';
@@ -18,6 +18,8 @@ final class CoroutineContextStore
     /**
      * Store tenant context for the current coroutine.
      * In HTTP (coroutine) mode, the context becomes immutable after the first set() call.
+     *
+     * @throws TenantContextImmutableException if context was already set in coroutine mode
      */
     public static function set(TenantContext $context): void
     {
@@ -55,6 +57,8 @@ final class CoroutineContextStore
 
     /**
      * Get the current tenant context, or throw if not set.
+     *
+     * @throws TenantRequiredException if no context has been set
      */
     public static function getOrFail(): TenantContext
     {
@@ -73,6 +77,17 @@ final class CoroutineContextStore
     public static function setFallback(TenantContext $context): void
     {
         self::$fallback = $context;
+    }
+
+    /**
+     * Swap the fallback context, returning the previous one.
+     * Useful for CLI tenant switching with proper cleanup.
+     */
+    public static function swapFallback(?TenantContext $context): ?TenantContext
+    {
+        $previous = self::$fallback;
+        self::$fallback = $context;
+        return $previous;
     }
 
     /**

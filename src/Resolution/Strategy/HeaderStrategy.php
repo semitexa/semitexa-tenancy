@@ -6,6 +6,7 @@ namespace Semitexa\Tenancy\Resolution\Strategy;
 
 use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Tenancy\Support\TenantIdSanitizer;
 
 final class HeaderStrategy implements TenantResolverStrategy
 {
@@ -22,23 +23,12 @@ final class HeaderStrategy implements TenantResolverStrategy
             return null;
         }
 
-        $tenantId = $this->sanitize($value);
+        $tenantId = TenantIdSanitizer::sanitize($value, $this->maxLength);
 
         if ($tenantId === null) {
             return null;
         }
 
         return TenantContext::fromResolution($tenantId, 'header', $value);
-    }
-
-    private function sanitize(string $value): ?string
-    {
-        $clean = preg_replace('/[^a-zA-Z0-9_-]/', '', $value);
-
-        if ($clean === '') {
-            return null;
-        }
-
-        return substr($clean, 0, $this->maxLength);
     }
 }
