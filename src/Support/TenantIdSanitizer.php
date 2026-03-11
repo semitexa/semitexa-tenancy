@@ -10,10 +10,13 @@ final class TenantIdSanitizer
     {
         $clean = preg_replace('/[^a-zA-Z0-9_-]/', '', $value);
 
-        if ($clean === '') {
+        if ($clean === null || $clean === '') {
             return null;
         }
 
+        if ($maxLength <= 0) {
+            return null;
+        }
         return substr($clean, 0, $maxLength);
     }
 }
