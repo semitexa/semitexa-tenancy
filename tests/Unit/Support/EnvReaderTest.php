@@ -13,10 +13,8 @@ final class EnvReaderTest extends TestCase
     protected function tearDown(): void
     {
         putenv('TEST_ENV_KEY');
-        unset($_ENV['TEST_ENV_KEY'], $_SERVER['TEST_ENV_KEY']);
         putenv('TENANT_ACME_NAME');
         putenv('TENANT_ACME_STATUS');
-        unset($_ENV['TENANT_ACME_NAME'], $_ENV['TENANT_ACME_STATUS']);
     }
 
     #[Test]
@@ -31,22 +29,6 @@ final class EnvReaderTest extends TestCase
         putenv('TEST_ENV_KEY=from_env');
 
         $this->assertSame('from_env', EnvReader::get('TEST_ENV_KEY'));
-    }
-
-    #[Test]
-    public function get_reads_from_env_superglobal(): void
-    {
-        $_ENV['TEST_ENV_KEY'] = 'from_superglobal';
-
-        $this->assertSame('from_superglobal', EnvReader::get('TEST_ENV_KEY'));
-    }
-
-    #[Test]
-    public function get_reads_from_server_superglobal(): void
-    {
-        $_SERVER['TEST_ENV_KEY'] = 'from_server';
-
-        $this->assertSame('from_server', EnvReader::get('TEST_ENV_KEY'));
     }
 
     #[Test]

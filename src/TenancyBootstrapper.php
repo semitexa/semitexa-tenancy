@@ -29,6 +29,9 @@ use Semitexa\Tenancy\Support\EnvReader;
  */
 final class TenancyBootstrapper
 {
+    /** @var list<LayerDefinition>|null Cached discovery result (worker-scoped) */
+    private static ?array $discoveredLayerDefinitions = null;
+
     private TenantResolverHandler $handler;
     private TenantResolverInterface $resolver;
     private TenantRepositoryInterface $repository;
@@ -97,9 +100,18 @@ final class TenancyBootstrapper
      *
      * @return LayerDefinition[]
      */
+    /**
+     * Discover layer definitions from classes with #[AsTenancyLayersProvider].
+     * Uses a static cache so reflection + discovery runs only once per worker.
+     */
     private function discoverLayerDefinitions(): array
     {
+        if (self::$discoveredLayerDefinitions !== null) {
+            return self::$discoveredLayerDefinitions;
+        }
+
         if (!class_exists(ClassDiscovery::class)) {
+            self::$discoveredLayerDefinitions = [];
             return [];
         }
 
@@ -126,6 +138,7 @@ final class TenancyBootstrapper
             }
         }
 
+        self::$discoveredLayerDefinitions = $definitions;
         return $definitions;
     }
 

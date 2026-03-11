@@ -13,14 +13,6 @@ final class EnvReader
             return $value;
         }
 
-        if (isset($_ENV[$key])) {
-            return $_ENV[$key];
-        }
-
-        if (isset($_SERVER[$key])) {
-            return $_SERVER[$key];
-        }
-
         return $default;
     }
 
@@ -44,11 +36,7 @@ final class EnvReader
     {
         $tenants = [];
 
-        $sources = array_merge(
-            getenv() ?: [],
-            $_ENV,
-            $_SERVER,
-        );
+        $sources = getenv() ?: [];
 
         foreach ($sources as $key => $value) {
             if (!is_string($key) || !str_starts_with($key, 'TENANT_') || $key === 'TENANT_STRATEGY' || $key === 'TENANT_HEADER' || $key === 'TENANT_DEFAULT') {
