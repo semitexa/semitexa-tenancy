@@ -68,7 +68,7 @@ final class TenantContext implements TenantContextInterface
 
         return new self(
             new OrganizationValue('default', 'Default Organization'),
-            $locale !== '' ? (LocaleValue::fromCode($locale) ?? LocaleValue::default()) : LocaleValue::default(),
+            $locale !== '' ? LocaleValue::fromCode($locale) : LocaleValue::default(),
             $environment !== '' ? EnvironmentValue::fromValue($environment) : EnvironmentValue::prod(),
         );
     }

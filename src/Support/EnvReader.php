@@ -24,7 +24,7 @@ final class EnvReader
             return $default;
         }
 
-        return $value === 'true' || $value === '1';
+        return filter_var(trim($value), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $default;
     }
 
     /**
@@ -39,7 +39,7 @@ final class EnvReader
         $sources = getenv() ?: [];
 
         foreach ($sources as $key => $value) {
-            if (!is_string($key) || !str_starts_with($key, 'TENANT_') || $key === 'TENANT_STRATEGY' || $key === 'TENANT_HEADER' || $key === 'TENANT_DEFAULT') {
+            if (!str_starts_with($key, 'TENANT_') || $key === 'TENANT_STRATEGY' || $key === 'TENANT_HEADER' || $key === 'TENANT_DEFAULT') {
                 continue;
             }
 
