@@ -16,6 +16,11 @@ use Semitexa\Core\Tenant\Layer\LocaleValue;
 use Semitexa\Core\Tenant\Layer\EnvironmentLayer;
 use Semitexa\Core\Tenant\Layer\EnvironmentValue;
 
+/**
+ * @property-read string $tenantId
+ * @property-read string $strategy
+ * @property-read ?string $source
+ */
 final class TenantContext implements TenantContextInterface
 {
     private static ?self $instance = null;
