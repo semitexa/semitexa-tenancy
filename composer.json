@@ -1,7 +1,7 @@
 {
     "name": "semitexa/tenancy",
     "description": "Multi-tenancy module for Semitexa Framework",
-    "version": "1.0.5",
+    "version": "1.0.6",
     "type": "semitexa-module",
     "license": "MIT",
     "require": {
