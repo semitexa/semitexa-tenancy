@@ -110,6 +110,23 @@ final class TenantContext implements TenantContextInterface
         };
     }
 
+    public function __set(string $name, mixed $value): void
+    {
+        match ($name) {
+            'tenantId', 'strategy', 'source' => throw new \LogicException("Property {$name} is read-only."),
+            default => throw new \InvalidArgumentException("Unknown property: {$name}"),
+        };
+    }
+
+    public function __isset(string $name): bool
+    {
+        return match ($name) {
+            'tenantId', 'strategy' => true,
+            'source' => $this->source !== null,
+            default => false,
+        };
+    }
+
     public static function fromQueuePayload(array $payload): self
     {
         $layers = [];
