@@ -16,6 +16,11 @@ use Semitexa\Core\Tenant\Layer\LocaleValue;
 use Semitexa\Core\Tenant\Layer\EnvironmentLayer;
 use Semitexa\Core\Tenant\Layer\EnvironmentValue;
 
+/**
+ * @property-read string $tenantId
+ * @property-read string $strategy
+ * @property-read ?string $source
+ */
 final class TenantContext implements TenantContextInterface
 {
     private static ?self $instance = null;
@@ -102,6 +107,23 @@ final class TenantContext implements TenantContextInterface
             'strategy' => $this->strategy,
             'source' => $this->source,
             default => throw new \InvalidArgumentException("Unknown property: {$name}"),
+        };
+    }
+
+    public function __set(string $name, mixed $value): void
+    {
+        match ($name) {
+            'tenantId', 'strategy', 'source' => throw new \LogicException("Property {$name} is read-only."),
+            default => throw new \InvalidArgumentException("Unknown property: {$name}"),
+        };
+    }
+
+    public function __isset(string $name): bool
+    {
+        return match ($name) {
+            'tenantId', 'strategy' => true,
+            'source' => $this->source !== null,
+            default => false,
         };
     }
 
