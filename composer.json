@@ -17,5 +17,9 @@
         "semitexa-module": {
             "extends": null
         }
-    }
+    },
+    "keywords": [
+        "semitexa",
+        "tenancy"
+    ]
 }
