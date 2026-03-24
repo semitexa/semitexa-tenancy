@@ -1,6 +1,6 @@
 {
     "name": "semitexa/tenancy",
-    "description": "Multi-tenancy module for Semitexa Framework",
+    "description": "Semitexa Tenancy - tenant resolution, scoped context, and multi-tenant application support",
     "version": "1.0.6",
     "type": "semitexa-module",
     "license": "MIT",
@@ -17,5 +17,12 @@
         "semitexa-module": {
             "extends": null
         }
-    }
+    },
+    "keywords": [
+        "semitexa",
+        "tenancy",
+        "multi-tenant",
+        "tenant-context",
+        "isolation"
+    ]
 }
