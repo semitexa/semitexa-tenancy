@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Support;
 
-use Semitexa\Core\Environment;
-
 final class TenantUrlResolver
 {
     public static function resolveBaseUrl(string $tenantId, ?bool $preferPublic = null): ?string
@@ -46,19 +44,19 @@ final class TenantUrlResolver
 
     private static function isProductionEnvironment(): bool
     {
-        $appEnv = strtolower((string) (Environment::getEnvValue('APP_ENV', 'prod') ?? 'prod'));
+        $appEnv = strtolower(EnvReader::get('APP_ENV', 'prod'));
 
         return in_array($appEnv, ['prod', 'production'], true);
     }
 
     private static function readFirstHost(string $singleKey, string $listKey): ?string
     {
-        $singleHost = trim((string) (Environment::getEnvValue($singleKey) ?? ''));
+        $singleHost = trim(EnvReader::get($singleKey));
         if ($singleHost !== '') {
             return $singleHost;
         }
 
-        $list = trim((string) (Environment::getEnvValue($listKey) ?? ''));
+        $list = trim(EnvReader::get($listKey));
         if ($list === '') {
             return null;
         }

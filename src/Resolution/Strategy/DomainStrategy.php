@@ -71,7 +71,23 @@ final class DomainStrategy implements TenantResolverStrategy
 
     private function normalizeHost(string $host): ?string
     {
-        $host = strtolower(trim(explode(':', $host)[0] ?? ''));
+        $host = strtolower(trim($host));
+
+        if ($host === '') {
+            return null;
+        }
+
+        if ($host[0] === '[') {
+            $endBracketPos = strpos($host, ']');
+
+            if ($endBracketPos === false) {
+                return null;
+            }
+
+            $host = substr($host, 0, $endBracketPos + 1);
+        } else {
+            $host = explode(':', $host, 2)[0];
+        }
 
         return $host === '' ? null : $host;
     }

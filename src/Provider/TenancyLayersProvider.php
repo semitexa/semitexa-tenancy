@@ -28,10 +28,7 @@ class TenancyLayersProvider
             new LayerDefinition(
                 layer: new OrganizationLayer(),
                 strategy: new OrganizationStrategy(
-                    new StrategyChain(array_filter([
-                        $this->buildDomainStrategy(),
-                        new SubdomainStrategy(baseDomain: $this->getBaseDomain()),
-                    ]))
+                    new StrategyChain($this->buildOrganizationStrategies())
                 ),
             ),
             new LayerDefinition(
@@ -70,6 +67,18 @@ class TenancyLayersProvider
                     $map[$host] = $tenantId;
                 }
             }
+
+            $publicDomain = trim((string) ($tenant['config']['public_domain'] ?? ''));
+            if ($publicDomain !== '') {
+                $map[$publicDomain] = $tenantId;
+            }
+
+            foreach (($tenant['config']['public_domains'] ?? []) as $host) {
+                $host = trim((string) $host);
+                if ($host !== '') {
+                    $map[$host] = $tenantId;
+                }
+            }
         }
 
         return $map === [] ? null : new DomainStrategy($map);
@@ -84,5 +93,22 @@ class TenancyLayersProvider
         }
 
         return array_filter(array_map('trim', explode(',', $prefixes)));
+    }
+
+    /**
+     * @return list<\Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy>
+     */
+    private function buildOrganizationStrategies(): array
+    {
+        $strategies = [];
+        $domainStrategy = $this->buildDomainStrategy();
+
+        if ($domainStrategy !== null) {
+            $strategies[] = $domainStrategy;
+        }
+
+        $strategies[] = new SubdomainStrategy(baseDomain: $this->getBaseDomain());
+
+        return $strategies;
     }
 }

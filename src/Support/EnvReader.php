@@ -34,6 +34,7 @@ final class EnvReader
      */
     public static function scanDetailedTenants(): array
     {
+        /** @var array<string, array{name?: string, status?: string, config?: array{domain?: string, domains?: list<string>, public_domain?: string, public_domains?: list<string>}}> $tenants */
         $tenants = [];
 
         $sources = getenv() ?: [];
@@ -47,8 +48,16 @@ final class EnvReader
                 $id = strtolower($matches[1]);
                 $field = strtolower($matches[2]);
 
+                if (!isset($tenants[$id])) {
+                    $tenants[$id] = [];
+                }
+
+                /** @var array{domain?: string, domains?: list<string>, public_domain?: string, public_domains?: list<string>} $config */
+                $config = $tenants[$id]['config'] ?? [];
+
                 if ($field === 'domain') {
-                    $tenants[$id]['config']['domain'] = trim((string) $value);
+                    $config['domain'] = trim((string) $value);
+                    $tenants[$id]['config'] = $config;
                     continue;
                 }
 
@@ -58,12 +67,14 @@ final class EnvReader
                         explode(',', (string) $value),
                     )));
 
-                    $tenants[$id]['config']['domains'] = $domains;
+                    $config['domains'] = $domains;
+                    $tenants[$id]['config'] = $config;
                     continue;
                 }
 
                 if ($field === 'public_domain') {
-                    $tenants[$id]['config']['public_domain'] = trim((string) $value);
+                    $config['public_domain'] = trim((string) $value);
+                    $tenants[$id]['config'] = $config;
                     continue;
                 }
 
@@ -73,7 +84,8 @@ final class EnvReader
                         explode(',', (string) $value),
                     )));
 
-                    $tenants[$id]['config']['public_domains'] = $domains;
+                    $config['public_domains'] = $domains;
+                    $tenants[$id]['config'] = $config;
                     continue;
                 }
 
@@ -81,6 +93,7 @@ final class EnvReader
             }
         }
 
+        /** @var array<string, array{name?: string, status?: string, config?: array{domain?: string, domains?: list<string>, public_domain?: string, public_domains?: list<string>}}> $tenants */
         return $tenants;
     }
 }

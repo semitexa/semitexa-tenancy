@@ -17,7 +17,7 @@ final class StrategyChain implements TenantResolverStrategy
      */
     public function __construct(array $strategies)
     {
-        $this->strategies = array_values($strategies);
+        $this->strategies = $strategies;
     }
 
     public function resolve(Request $request): ?TenantContext
