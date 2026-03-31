@@ -42,6 +42,18 @@ final class DomainStrategy implements TenantResolverStrategy
             $host = $request->getServer('SERVER_NAME');
         }
 
+        if ($host === '') {
+            $host = $request->getServer('host');
+        }
+
+        if ($host === '') {
+            $host = $request->getServer('server_name');
+        }
+
+        if ($host === '') {
+            $host = (string) ($request->getHeader('host') ?? '');
+        }
+
         $host = $this->normalizeHost($host);
 
         if ($host === null) {
