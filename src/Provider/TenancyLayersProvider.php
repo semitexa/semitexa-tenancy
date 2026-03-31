@@ -10,8 +10,10 @@ use Semitexa\Core\Tenant\Layer\OrganizationLayer;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;
 use Semitexa\Core\Tenant\Layer\EnvironmentLayer;
 use Semitexa\Tenancy\Resolution\Strategy\SubdomainStrategy;
+use Semitexa\Tenancy\Resolution\Strategy\DomainStrategy;
 use Semitexa\Tenancy\Resolution\Strategy\PathStrategy;
 use Semitexa\Tenancy\Resolution\Strategy\HeaderStrategy;
+use Semitexa\Tenancy\Resolution\Strategy\StrategyChain;
 use Semitexa\Tenancy\Strategy\OrganizationStrategy;
 use Semitexa\Tenancy\Strategy\LocaleStrategy;
 use Semitexa\Tenancy\Strategy\EnvironmentStrategy;
@@ -26,7 +28,10 @@ class TenancyLayersProvider
             new LayerDefinition(
                 layer: new OrganizationLayer(),
                 strategy: new OrganizationStrategy(
-                    new SubdomainStrategy(baseDomain: $this->getBaseDomain())
+                    new StrategyChain(array_filter([
+                        $this->buildDomainStrategy(),
+                        new SubdomainStrategy(baseDomain: $this->getBaseDomain()),
+                    ]))
                 ),
             ),
             new LayerDefinition(
@@ -47,6 +52,27 @@ class TenancyLayersProvider
     private function getBaseDomain(): string
     {
         return EnvReader::get('TENANCY_BASE_DOMAIN');
+    }
+
+    private function buildDomainStrategy(): ?DomainStrategy
+    {
+        $map = [];
+
+        foreach (EnvReader::scanDetailedTenants() as $tenantId => $tenant) {
+            $domain = trim((string) ($tenant['config']['domain'] ?? ''));
+            if ($domain !== '') {
+                $map[$domain] = $tenantId;
+            }
+
+            foreach (($tenant['config']['domains'] ?? []) as $host) {
+                $host = trim((string) $host);
+                if ($host !== '') {
+                    $map[$host] = $tenantId;
+                }
+            }
+        }
+
+        return $map === [] ? null : new DomainStrategy($map);
     }
 
     private function getLocalePrefixes(): array

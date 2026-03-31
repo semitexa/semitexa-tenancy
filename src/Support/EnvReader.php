@@ -28,9 +28,9 @@ final class EnvReader
     }
 
     /**
-     * Scan environment for TENANT_{ID}_NAME / TENANT_{ID}_STATUS patterns.
+     * Scan environment for TENANT_{ID}_NAME / STATUS / DOMAIN / DOMAINS / PUBLIC_DOMAIN / PUBLIC_DOMAINS patterns.
      *
-     * @return array<string, array{name?: string, status?: string}>
+     * @return array<string, array{name?: string, status?: string, config?: array{domain?: string, domains?: list<string>, public_domain?: string, public_domains?: list<string>}}>
      */
     public static function scanDetailedTenants(): array
     {
@@ -43,9 +43,40 @@ final class EnvReader
                 continue;
             }
 
-            if (preg_match('/^TENANT_([A-Z0-9_]+?)_(NAME|STATUS)$/', $key, $matches)) {
+            if (preg_match('/^TENANT_([A-Z0-9_]+?)_(NAME|STATUS|DOMAIN|DOMAINS|PUBLIC_DOMAIN|PUBLIC_DOMAINS)$/', $key, $matches)) {
                 $id = strtolower($matches[1]);
                 $field = strtolower($matches[2]);
+
+                if ($field === 'domain') {
+                    $tenants[$id]['config']['domain'] = trim((string) $value);
+                    continue;
+                }
+
+                if ($field === 'domains') {
+                    $domains = array_values(array_filter(array_map(
+                        static fn (string $item): string => trim($item),
+                        explode(',', (string) $value),
+                    )));
+
+                    $tenants[$id]['config']['domains'] = $domains;
+                    continue;
+                }
+
+                if ($field === 'public_domain') {
+                    $tenants[$id]['config']['public_domain'] = trim((string) $value);
+                    continue;
+                }
+
+                if ($field === 'public_domains') {
+                    $domains = array_values(array_filter(array_map(
+                        static fn (string $item): string => trim($item),
+                        explode(',', (string) $value),
+                    )));
+
+                    $tenants[$id]['config']['public_domains'] = $domains;
+                    continue;
+                }
+
                 $tenants[$id][$field] = (string) $value;
             }
         }

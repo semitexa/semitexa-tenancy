@@ -15,6 +15,10 @@ final class EnvReaderTest extends TestCase
         putenv('TEST_ENV_KEY');
         putenv('TENANT_ACME_NAME');
         putenv('TENANT_ACME_STATUS');
+        putenv('TENANT_ACME_DOMAIN');
+        putenv('TENANT_ACME_DOMAINS');
+        putenv('TENANT_ACME_PUBLIC_DOMAIN');
+        putenv('TENANT_ACME_PUBLIC_DOMAINS');
     }
 
     #[Test]
@@ -72,5 +76,28 @@ final class EnvReaderTest extends TestCase
         $this->assertArrayHasKey('acme', $result);
         $this->assertSame('Acme Corp', $result['acme']['name']);
         $this->assertSame('active', $result['acme']['status']);
+    }
+
+    #[Test]
+    public function scan_detailed_tenants_reads_domain_metadata(): void
+    {
+        putenv('TENANT_ACME_NAME=Acme Corp');
+        putenv('TENANT_ACME_DOMAIN=semitexa.test');
+        putenv('TENANT_ACME_DOMAINS=www.semitexa.test, shop.semitexa.test');
+        putenv('TENANT_ACME_PUBLIC_DOMAIN=semitexa.com');
+        putenv('TENANT_ACME_PUBLIC_DOMAINS=www.semitexa.com, shop.semitexa.com');
+
+        $result = EnvReader::scanDetailedTenants();
+
+        $this->assertSame('semitexa.test', $result['acme']['config']['domain']);
+        $this->assertSame(
+            ['www.semitexa.test', 'shop.semitexa.test'],
+            $result['acme']['config']['domains'],
+        );
+        $this->assertSame('semitexa.com', $result['acme']['config']['public_domain']);
+        $this->assertSame(
+            ['www.semitexa.com', 'shop.semitexa.com'],
+            $result['acme']['config']['public_domains'],
+        );
     }
 }
