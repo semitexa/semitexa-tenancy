@@ -1,4 +1,4 @@
-# semitexa/tenancy
+# Semitexa Tenancy
 
 Tenant resolution, scoped context, and multi-tenant application support.
 
