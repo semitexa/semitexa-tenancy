@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\CLI;
 
-use Semitexa\Core\Attributes\AsCommand;
+use Semitexa\Core\Attribute\AsCommand;
 use Semitexa\Core\Console\Command\BaseCommand;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
 use Semitexa\Tenancy\TenancyBootstrapper;

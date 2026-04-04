@@ -37,8 +37,10 @@ final class TenancyBootstrapper
     private TenantRepositoryInterface $repository;
     private bool $enabled;
 
-    public function __construct(?EventDispatcherInterface $events = null)
-    {
+    public function __construct(
+        private readonly ?ClassDiscovery $classDiscovery = null,
+        ?EventDispatcherInterface $events = null,
+    ) {
         $this->enabled = EnvReader::getBool('TENANCY_ENABLED');
 
         $this->repository = $this->buildRepository();
@@ -110,13 +112,13 @@ final class TenancyBootstrapper
             return self::$discoveredLayerDefinitions;
         }
 
-        if (!class_exists(ClassDiscovery::class)) {
+        if (!class_exists(ClassDiscovery::class) || $this->classDiscovery === null) {
             self::$discoveredLayerDefinitions = [];
             return [];
         }
 
-        ClassDiscovery::initialize();
-        $providerClasses = ClassDiscovery::findClassesWithAttribute(AsTenancyLayersProvider::class);
+        $this->classDiscovery->initialize();
+        $providerClasses = $this->classDiscovery->findClassesWithAttribute(AsTenancyLayersProvider::class);
         $definitions = [];
 
         foreach ($providerClasses as $class) {
