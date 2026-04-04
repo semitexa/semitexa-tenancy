@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Handler;
 
-use Semitexa\Core\Response;
+use Semitexa\Core\HttpResponse;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
 
 /**
@@ -14,14 +14,14 @@ use Semitexa\Tenancy\Context\CoroutineContextStore;
 final class TenantRequiredGuard
 {
     /**
-     * @return Response|null null = tenant is present; Response = short-circuit with error
+     * @return HttpResponse|null null = tenant is present; HttpResponse = short-circuit with error
      */
-    public function check(): ?Response
+    public function check(): ?HttpResponse
     {
         $context = CoroutineContextStore::get();
 
         if ($context === null || $context->isDefault()) {
-            return Response::json([
+            return HttpResponse::json([
                 'error' => 'This endpoint requires a tenant context',
             ], 403);
         }

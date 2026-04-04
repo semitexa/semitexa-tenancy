@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Semitexa\Tenancy\Handler;
 
 use Semitexa\Core\Request;
-use Semitexa\Core\Response;
+use Semitexa\Core\HttpResponse;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
 use Semitexa\Tenancy\Context\TenantContext;
@@ -38,9 +38,9 @@ final class TenantResolverHandler
     /**
      * Resolve and store tenant context for the current request.
      *
-     * @return Response|null null = continue processing; Response = short-circuit with error
+     * @return HttpResponse|null null = continue processing; HttpResponse = short-circuit with error
      */
-    public function handle(Request $request): ?Response
+    public function handle(Request $request): ?HttpResponse
     {
         $context = $this->resolver->resolve($request);
 
