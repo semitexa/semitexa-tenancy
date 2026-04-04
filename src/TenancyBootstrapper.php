@@ -32,15 +32,17 @@ final class TenancyBootstrapper
     /** @var list<LayerDefinition>|null Cached discovery result (worker-scoped) */
     private static ?array $discoveredLayerDefinitions = null;
 
+    private ClassDiscovery $classDiscovery;
     private TenantResolverHandler $handler;
     private TenantResolverInterface $resolver;
     private TenantRepositoryInterface $repository;
     private bool $enabled;
 
     public function __construct(
-        private readonly ?ClassDiscovery $classDiscovery = null,
+        ?ClassDiscovery $classDiscovery = null,
         ?EventDispatcherInterface $events = null,
     ) {
+        $this->classDiscovery = $classDiscovery ?? new ClassDiscovery();
         $this->enabled = EnvReader::getBool('TENANCY_ENABLED');
 
         $this->repository = $this->buildRepository();
@@ -100,21 +102,18 @@ final class TenancyBootstrapper
     /**
      * Discover TenancyLayersProvider classes and collect all layer definitions.
      *
-     * @return LayerDefinition[]
+     * @return list<LayerDefinition>
      */
     /**
      * Discover layer definitions from classes with #[AsTenancyLayersProvider].
      * Uses a static cache so reflection + discovery runs only once per worker.
+     *
+     * @return list<LayerDefinition>
      */
     private function discoverLayerDefinitions(): array
     {
         if (self::$discoveredLayerDefinitions !== null) {
             return self::$discoveredLayerDefinitions;
-        }
-
-        if (!class_exists(ClassDiscovery::class) || $this->classDiscovery === null) {
-            self::$discoveredLayerDefinitions = [];
-            return [];
         }
 
         $this->classDiscovery->initialize();
