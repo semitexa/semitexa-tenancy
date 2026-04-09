@@ -135,6 +135,7 @@ final class TenancyBootstrapper
                     }
                 }
             } catch (\Throwable) {
+                // Module layer discovery is best-effort — skip modules that fail
                 continue;
             }
         }
