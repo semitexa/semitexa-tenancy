@@ -23,8 +23,6 @@ use Semitexa\Core\Tenant\Layer\EnvironmentValue;
  */
 final class TenantContext implements TenantContextInterface
 {
-    private static ?self $instance = null;
-
     private array $layers = [];
 
     private string $strategy = 'none';
@@ -210,21 +208,29 @@ final class TenantContext implements TenantContextInterface
 
     public static function get(): ?self
     {
-        return self::$instance;
+        $context = TenantContextStore::shared()->tryGet();
+
+        return $context instanceof self ? $context : null;
     }
 
     public static function getOrFail(): self
     {
-        return self::$instance ?? throw new TenantRequiredException('No tenant context has been set');
+        $context = TenantContextStore::shared()->getOrFail();
+
+        if ($context instanceof self) {
+            return $context;
+        }
+
+        throw new TenantRequiredException('No tenancy tenant context has been set');
     }
 
     public static function set(self $context): void
     {
-        self::$instance = $context;
+        TenantContextStore::shared()->set($context);
     }
 
     public static function clear(): void
     {
-        self::$instance = null;
+        TenantContextStore::shared()->clear();
     }
 }

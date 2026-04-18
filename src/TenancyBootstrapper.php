@@ -6,6 +6,10 @@ namespace Semitexa\Tenancy;
 
 use Semitexa\Core\Discovery\ClassDiscovery;
 use Semitexa\Core\Event\EventDispatcherInterface;
+use Semitexa\Core\HttpResponse;
+use Semitexa\Core\Request;
+use Semitexa\Core\Tenant\TenantContextStoreInterface;
+use Semitexa\Core\Tenant\TenancyBootstrapperInterface;
 use Semitexa\Tenancy\Attribute\AsTenancyLayersProvider;
 use Semitexa\Tenancy\Definition\LayerDefinition;
 use Semitexa\Tenancy\Handler\TenantResolverHandler;
@@ -27,7 +31,7 @@ use Semitexa\Tenancy\Support\EnvReader;
  * Reads TENANCY_* and TENANTS* environment variables and constructs
  * the full resolution chain, repository, and handler.
  */
-final class TenancyBootstrapper
+final class TenancyBootstrapper implements TenancyBootstrapperInterface
 {
     /** @var list<LayerDefinition>|null Cached discovery result (worker-scoped) */
     private static ?array $discoveredLayerDefinitions = null;
@@ -39,6 +43,7 @@ final class TenancyBootstrapper
     private bool $enabled;
 
     public function __construct(
+        private readonly TenantContextStoreInterface $tenantContextStore,
         ?ClassDiscovery $classDiscovery = null,
         ?EventDispatcherInterface $events = null,
     ) {
@@ -50,6 +55,7 @@ final class TenancyBootstrapper
         $this->handler = new TenantResolverHandler(
             resolver: $this->resolver,
             tenants: $this->repository,
+            tenantContextStore: $this->tenantContextStore,
             events: $events,
             requireTenant: EnvReader::getBool('TENANCY_REQUIRED'),
         );
@@ -73,6 +79,11 @@ final class TenancyBootstrapper
     public function getRepository(): TenantRepositoryInterface
     {
         return $this->repository;
+    }
+
+    public function resolve(Request $request): ?HttpResponse
+    {
+        return $this->handler->handle($request);
     }
 
     private function buildResolver(): TenantResolverInterface

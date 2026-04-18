@@ -10,6 +10,7 @@ use Semitexa\Core\Discovery\ClassDiscovery;
 use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
 use Semitexa\Tenancy\Attribute\AsTenancyLayersProvider;
+use Semitexa\Tenancy\Context\TenantContextStore;
 use Semitexa\Tenancy\Definition\LayerDefinition;
 use Semitexa\Tenancy\Resolution\MultilayerTenantResolver;
 use Semitexa\Tenancy\Resolution\TenantResolverChain;
@@ -27,7 +28,7 @@ final class TenancyBootstrapperTest extends TestCase
     #[Test]
     public function auto_creates_class_discovery_when_none_is_injected(): void
     {
-        $bootstrapper = new TenancyBootstrapper();
+        $bootstrapper = new TenancyBootstrapper(new TenantContextStore());
 
         $this->assertInstanceOf(MultilayerTenantResolver::class, $bootstrapper->getResolver());
     }
@@ -42,7 +43,7 @@ final class TenancyBootstrapperTest extends TestCase
             ->with(AsTenancyLayersProvider::class)
             ->willReturn([TestTenancyLayersProvider::class]);
 
-        $bootstrapper = new TenancyBootstrapper($classDiscovery);
+        $bootstrapper = new TenancyBootstrapper(new TenantContextStore(), $classDiscovery);
 
         $this->assertInstanceOf(MultilayerTenantResolver::class, $bootstrapper->getResolver());
     }
@@ -57,7 +58,7 @@ final class TenancyBootstrapperTest extends TestCase
             ->with(AsTenancyLayersProvider::class)
             ->willReturn([]);
 
-        $bootstrapper = new TenancyBootstrapper($classDiscovery);
+        $bootstrapper = new TenancyBootstrapper(new TenantContextStore(), $classDiscovery);
 
         $this->assertInstanceOf(TenantResolverChain::class, $bootstrapper->getResolver());
     }

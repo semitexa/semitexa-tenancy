@@ -7,8 +7,9 @@ namespace Semitexa\Tenancy\CLI;
 use Semitexa\Core\Attribute\AsCommand;
 use Semitexa\Core\Console\Command\BaseCommand;
 use Semitexa\Core\Event\EventDispatcherInterface;
-use Semitexa\Tenancy\Context\CoroutineContextStore;
+use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Tenancy\Context\TenantContextStore;
 use Semitexa\Tenancy\Event\TenantSwitched;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
 use Semitexa\Tenancy\TenancyBootstrapper;
@@ -31,14 +32,18 @@ class TenantRunCommand extends BaseCommand
 {
     private TenantRepositoryInterface $repository;
     private ?EventDispatcherInterface $events;
+    private TenantContextStoreInterface $tenantContextStore;
 
     public function __construct(
         ?TenantRepositoryInterface $repository = null,
         ?EventDispatcherInterface $events = null,
+        ?TenantContextStoreInterface $tenantContextStore = null,
     ) {
         parent::__construct();
-        $this->repository = $repository ?? (new TenancyBootstrapper())->getRepository();
+        $store = $tenantContextStore ?? TenantContextStore::shared();
+        $this->repository = $repository ?? (new TenancyBootstrapper($store))->getRepository();
         $this->events = $events;
+        $this->tenantContextStore = $store;
     }
 
     protected function configure(): void
@@ -66,10 +71,11 @@ class TenantRunCommand extends BaseCommand
 
         // Set tenant context for the CLI session, preserving previous
         $context = TenantContext::fromResolution($tenantId, 'cli', 'tenant:run');
-        $previous = CoroutineContextStore::swapFallback($context);
+        $previous = $this->swapFallback($context);
+        $previousEventContext = $previous instanceof TenantContext ? $previous : TenantContext::default();
 
         $this->events?->dispatch(new TenantSwitched(
-            previous: $previous ?? TenantContext::default(),
+            previous: $previousEventContext,
             current: $context,
         ));
 
@@ -87,12 +93,25 @@ class TenantRunCommand extends BaseCommand
 
             return $application->run($commandInput, $output);
         } finally {
-            CoroutineContextStore::swapFallback($previous);
+            $this->swapFallback($previous);
 
             $this->events?->dispatch(new TenantSwitched(
                 previous: $context,
-                current: $previous ?? TenantContext::default(),
+                current: $previousEventContext,
             ));
         }
+    }
+
+    private function swapFallback(?TenantContext $context): ?TenantContext
+    {
+        $previous = $this->tenantContextStore->tryGet();
+
+        if ($context instanceof TenantContext) {
+            $this->tenantContextStore->set($context);
+        } else {
+            $this->tenantContextStore->clear();
+        }
+
+        return $previous instanceof TenantContext ? $previous : null;
     }
 }

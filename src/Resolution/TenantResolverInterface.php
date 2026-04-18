@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Resolution;
 
-use Semitexa\Core\Request;
-use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Core\Tenant\TenantResolverInterface as CoreTenantResolverInterface;
 
-interface TenantResolverInterface
+interface TenantResolverInterface extends CoreTenantResolverInterface
 {
-    public function resolve(Request $request): TenantContext;
 }

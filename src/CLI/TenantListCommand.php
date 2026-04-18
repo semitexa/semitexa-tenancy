@@ -6,6 +6,7 @@ namespace Semitexa\Tenancy\CLI;
 
 use Semitexa\Core\Attribute\AsCommand;
 use Semitexa\Core\Console\Command\BaseCommand;
+use Semitexa\Tenancy\Context\TenantContextStore;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
 use Semitexa\Tenancy\TenancyBootstrapper;
 use Symfony\Component\Console\Command\Command;
@@ -21,7 +22,7 @@ class TenantListCommand extends BaseCommand
     public function __construct(?TenantRepositoryInterface $repository = null)
     {
         parent::__construct();
-        $this->repository = $repository ?? (new TenancyBootstrapper())->getRepository();
+        $this->repository = $repository ?? (new TenancyBootstrapper(TenantContextStore::shared()))->getRepository();
     }
 
     protected function configure(): void
