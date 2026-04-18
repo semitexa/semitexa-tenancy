@@ -104,9 +104,13 @@ class TenantRunCommand extends BaseCommand
 
     private function swapFallback(?TenantContext $context): ?TenantContext
     {
-        $previous = $this->tenantContextStore instanceof TenantContextStore
-            ? $this->tenantContextStore->swapFallback($context)
-            : TenantContextStore::shared()->swapFallback($context);
+        $previous = $this->tenantContextStore->tryGet();
+
+        if ($context instanceof TenantContext) {
+            $this->tenantContextStore->set($context);
+        } else {
+            $this->tenantContextStore->clear();
+        }
 
         return $previous instanceof TenantContext ? $previous : null;
     }
