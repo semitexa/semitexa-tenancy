@@ -4,102 +4,45 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Context;
 
-use Semitexa\Tenancy\Exception\TenantContextImmutableException;
-use Semitexa\Tenancy\Exception\TenantRequiredException;
-use Swoole\Coroutine;
-
-final class CoroutineContextStore implements ContextStoreInterface
+final class CoroutineContextStore
 {
-    private const CONTEXT_KEY = '__tenant_context';
-    private const LOCK_KEY = '__tenant_context_locked';
+    private function __construct()
+    {
+    }
 
-    private static ?TenantContext $fallback = null;
-
-    /**
-     * Store tenant context for the current coroutine.
-     * In HTTP (coroutine) mode, the context becomes immutable after the first set() call.
-     *
-     * @throws TenantContextImmutableException if context was already set in coroutine mode
-     */
     public static function set(TenantContext $context): void
     {
-        if (self::inCoroutine()) {
-            $coContext = Coroutine::getContext();
-
-            if (isset($coContext[self::LOCK_KEY]) && $coContext[self::LOCK_KEY] === true) {
-                throw new TenantContextImmutableException(
-                    'Tenant context is immutable within an HTTP request. '
-                    . 'Use CLI mode for tenant switching.',
-                );
-            }
-
-            $coContext[self::CONTEXT_KEY] = $context;
-            $coContext[self::LOCK_KEY] = true;
-
-            return;
-        }
-
-        self::$fallback = $context;
+        TenantContextStore::shared()->set($context);
     }
 
-    /**
-     * Get the current tenant context, or null if not set.
-     */
-    public static function get(): ?TenantContext
-    {
-        if (self::inCoroutine()) {
-            $coContext = Coroutine::getContext();
-            return $coContext[self::CONTEXT_KEY] ?? null;
-        }
-
-        return self::$fallback;
-    }
-
-    /**
-     * Get the current tenant context, or throw if not set.
-     *
-     * @throws TenantRequiredException if no context has been set
-     */
     public static function getOrFail(): TenantContext
     {
         $context = self::get();
 
-        if ($context === null) {
-            throw new TenantRequiredException('No tenant context has been set');
-        }
-
-        return $context;
+        return $context ?? throw new \Semitexa\Tenancy\Exception\TenantRequiredException('No tenant context has been set');
     }
 
-    /**
-     * Set fallback context for CLI/testing (non-coroutine mode).
-     */
     public static function setFallback(TenantContext $context): void
     {
-        self::$fallback = $context;
+        TenantContextStore::shared()->setFallback($context);
     }
 
-    /**
-     * Swap the fallback context, returning the previous one.
-     * Useful for CLI tenant switching with proper cleanup.
-     */
     public static function swapFallback(?TenantContext $context): ?TenantContext
     {
-        $previous = self::$fallback;
-        self::$fallback = $context;
-        return $previous;
+        $previous = TenantContextStore::shared()->swapFallback($context);
+
+        return $previous instanceof TenantContext ? $previous : null;
     }
 
-    /**
-     * Clear fallback context.
-     */
     public static function clearFallback(): void
     {
-        self::$fallback = null;
+        TenantContextStore::shared()->clear();
     }
 
-    private static function inCoroutine(): bool
+    public static function get(): ?TenantContext
     {
-        return class_exists(Coroutine::class, false) && Coroutine::getCid() > 0;
+        $context = TenantContextStore::shared()->tryGet();
+
+        return $context instanceof TenantContext ? $context : null;
     }
 }

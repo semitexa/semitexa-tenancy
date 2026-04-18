@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
+use Semitexa\Tenancy\Context\TenantContextStore;
 use Semitexa\Tenancy\Context\TenantContext;
 use Semitexa\Tenancy\Event\TenantNotFound;
 use Semitexa\Tenancy\Event\TenantResolved;
@@ -20,9 +21,17 @@ use Semitexa\Tenancy\Resolution\TenantResolverInterface;
 
 final class TenantResolverHandlerTest extends TestCase
 {
+    private TenantContextStore $store;
+
+    protected function setUp(): void
+    {
+        $this->store = new TenantContextStore();
+        $this->store->clear();
+    }
+
     protected function tearDown(): void
     {
-        CoroutineContextStore::clearFallback();
+        $this->store->clear();
     }
 
     #[Test]
@@ -37,7 +46,7 @@ final class TenantResolverHandlerTest extends TestCase
         $repo = $this->createMock(TenantRepositoryInterface::class);
         $repo->method('findActive')->with('acme')->willReturn($tenant);
 
-        $handler = new TenantResolverHandler($resolver, $repo);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store);
         $response = $handler->handle($this->makeRequest());
 
         $this->assertNull($response);
@@ -57,7 +66,7 @@ final class TenantResolverHandlerTest extends TestCase
         $repo = $this->createMock(TenantRepositoryInterface::class);
         $repo->method('findActive')->with('unknown')->willReturn(null);
 
-        $handler = new TenantResolverHandler($resolver, $repo);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store);
         $response = $handler->handle($this->makeRequest());
 
         $this->assertNotNull($response);
@@ -75,7 +84,7 @@ final class TenantResolverHandlerTest extends TestCase
         $repo = $this->createMock(TenantRepositoryInterface::class);
         $repo->method('findActive')->with('suspended')->willReturn(null);
 
-        $handler = new TenantResolverHandler($resolver, $repo);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store);
         $response = $handler->handle($this->makeRequest());
 
         $this->assertNotNull($response);
@@ -91,7 +100,7 @@ final class TenantResolverHandlerTest extends TestCase
         $repo = $this->createMock(TenantRepositoryInterface::class);
         $repo->expects($this->never())->method('findActive');
 
-        $handler = new TenantResolverHandler($resolver, $repo, requireTenant: false);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store, requireTenant: false);
         $response = $handler->handle($this->makeRequest());
 
         $this->assertNull($response);
@@ -108,7 +117,7 @@ final class TenantResolverHandlerTest extends TestCase
 
         $repo = $this->createMock(TenantRepositoryInterface::class);
 
-        $handler = new TenantResolverHandler($resolver, $repo, requireTenant: true);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store, requireTenant: true);
         $response = $handler->handle($this->makeRequest());
 
         $this->assertNotNull($response);
@@ -136,7 +145,7 @@ final class TenantResolverHandlerTest extends TestCase
                     && $event->tenant === $tenant;
             }));
 
-        $handler = new TenantResolverHandler($resolver, $repo, $events);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store, $events);
         $handler->handle($this->makeRequest());
     }
 
@@ -159,7 +168,7 @@ final class TenantResolverHandlerTest extends TestCase
                     && $event->context->tenantId === 'unknown';
             }));
 
-        $handler = new TenantResolverHandler($resolver, $repo, $events);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store, $events);
         $handler->handle($this->makeRequest());
     }
 
@@ -180,7 +189,7 @@ final class TenantResolverHandlerTest extends TestCase
                     && $event->tenant === null;
             }));
 
-        $handler = new TenantResolverHandler($resolver, $repo, $events);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store, $events);
         $handler->handle($this->makeRequest());
     }
 
@@ -196,7 +205,7 @@ final class TenantResolverHandlerTest extends TestCase
         $repo = $this->createMock(TenantRepositoryInterface::class);
         $repo->method('findActive')->willReturn($tenant);
 
-        $handler = new TenantResolverHandler($resolver, $repo);
+        $handler = new TenantResolverHandler($resolver, $repo, $this->store);
         $response = $handler->handle($this->makeRequest());
 
         $this->assertNull($response);

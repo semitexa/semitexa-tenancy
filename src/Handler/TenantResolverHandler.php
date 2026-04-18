@@ -7,12 +7,12 @@ namespace Semitexa\Tenancy\Handler;
 use Semitexa\Core\Request;
 use Semitexa\Core\HttpResponse;
 use Semitexa\Core\Event\EventDispatcherInterface;
-use Semitexa\Tenancy\Context\CoroutineContextStore;
+use Semitexa\Core\Tenant\TenantContextStoreInterface;
+use Semitexa\Core\Tenant\TenantResolverInterface;
 use Semitexa\Tenancy\Context\TenantContext;
 use Semitexa\Tenancy\Event\TenantNotFound;
 use Semitexa\Tenancy\Event\TenantResolved;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
-use Semitexa\Tenancy\Resolution\TenantResolverInterface;
 
 /**
  * Resolves tenant from the HTTP request, validates against the repository,
@@ -28,6 +28,7 @@ final class TenantResolverHandler
     public function __construct(
         private readonly TenantResolverInterface $resolver,
         private readonly TenantRepositoryInterface $tenants,
+        private readonly TenantContextStoreInterface $tenantContextStore,
         private readonly ?EventDispatcherInterface $events = null,
         private readonly bool $requireTenant = false,
         ?TenantErrorResponderInterface $responder = null,
@@ -53,7 +54,7 @@ final class TenantResolverHandler
                 return $this->responder->tenantNotFound($context);
             }
 
-            CoroutineContextStore::set($context);
+            $this->tenantContextStore->set($context);
             $this->events?->dispatch(new TenantResolved($context, $tenant));
 
             return null;
@@ -63,7 +64,7 @@ final class TenantResolverHandler
             return $this->responder->tenantRequired();
         }
 
-        CoroutineContextStore::set($context);
+        $this->tenantContextStore->set($context);
         $this->events?->dispatch(new TenantResolved($context));
 
         return null;

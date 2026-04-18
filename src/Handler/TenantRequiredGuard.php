@@ -5,7 +5,8 @@ declare(strict_types=1);
 namespace Semitexa\Tenancy\Handler;
 
 use Semitexa\Core\HttpResponse;
-use Semitexa\Tenancy\Context\CoroutineContextStore;
+use Semitexa\Core\Tenant\TenantContextStoreInterface;
+use Semitexa\Tenancy\Context\TenantContextStore;
 
 /**
  * Guard that can be called from handlers/endpoints that require a tenant.
@@ -13,12 +14,16 @@ use Semitexa\Tenancy\Context\CoroutineContextStore;
  */
 final class TenantRequiredGuard
 {
+    public function __construct(
+        private readonly ?TenantContextStoreInterface $tenantContextStore = null,
+    ) {}
+
     /**
      * @return HttpResponse|null null = tenant is present; HttpResponse = short-circuit with error
      */
     public function check(): ?HttpResponse
     {
-        $context = CoroutineContextStore::get();
+        $context = ($this->tenantContextStore ?? TenantContextStore::shared())->tryGet();
 
         if ($context === null || $context->isDefault()) {
             return HttpResponse::json([

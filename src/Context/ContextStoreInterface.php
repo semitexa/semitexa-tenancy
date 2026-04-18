@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Context;
 
+use Semitexa\Core\Tenant\TenantContextInterface;
+use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Tenancy\Exception\TenantRequiredException;
 
-interface ContextStoreInterface
+interface ContextStoreInterface extends TenantContextStoreInterface
 {
-    public static function set(TenantContext $context): void;
-
-    public static function get(): ?TenantContext;
-
     /**
      * @throws TenantRequiredException
      */
-    public static function getOrFail(): TenantContext;
+    public function getOrFail(): TenantContextInterface;
+
+    public function setFallback(TenantContextInterface $context): void;
+
+    public function swapFallback(?TenantContextInterface $context): ?TenantContextInterface;
 }

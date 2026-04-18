@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Propagation;
 
-use Semitexa\Tenancy\Context\CoroutineContextStore;
 use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Tenancy\Context\TenantContextStore;
 
 /**
  * Wraps and unwraps tenant context in queue job payloads.
@@ -17,7 +17,7 @@ use Semitexa\Tenancy\Context\TenantContext;
  *   // After dequeueing (consumer side):
  *   [$payload, $tenantContext] = TenantAwareJobSerializer::unwrap($receivedPayload);
  *   if ($tenantContext !== null) {
- *       CoroutineContextStore::setFallback($tenantContext);
+ *       TenantContextStore::shared()->setFallback($tenantContext);
  *   }
  *
  * Per decision A4: default tenant context is NOT propagated.
@@ -35,9 +35,9 @@ final class TenantAwareJobSerializer
      */
     public static function wrap(array $payload): array
     {
-        $context = CoroutineContextStore::get();
+        $context = TenantContextStore::shared()->tryGet();
 
-        if ($context === null) {
+        if (!$context instanceof TenantContext) {
             return $payload;
         }
 
@@ -83,7 +83,7 @@ final class TenantAwareJobSerializer
         [$cleaned, $context] = self::unwrap($payload);
 
         if ($context !== null) {
-            CoroutineContextStore::setFallback($context);
+            TenantContextStore::shared()->setFallback($context);
         }
 
         return $cleaned;
