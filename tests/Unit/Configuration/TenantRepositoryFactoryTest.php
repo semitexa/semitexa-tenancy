@@ -12,6 +12,31 @@ use Semitexa\Tenancy\Identification\ConfigTenantRepository;
 
 final class TenantRepositoryFactoryTest extends TestCase
 {
+    /** @var array<string, string|false> */
+    private array $originalTenantEnv = [];
+
+    protected function setUp(): void
+    {
+        foreach (getenv() ?: [] as $key => $value) {
+            if (str_starts_with((string) $key, 'TENANT_')) {
+                $this->originalTenantEnv[(string) $key] = $value;
+                putenv((string) $key);
+            }
+        }
+    }
+
+    protected function tearDown(): void
+    {
+        foreach ($this->originalTenantEnv as $key => $value) {
+            if ($value === false) {
+                putenv($key);
+                continue;
+            }
+            putenv($key . '=' . $value);
+        }
+        $this->originalTenantEnv = [];
+    }
+
     #[Test]
     public function builds_repository_from_compact_config(): void
     {
