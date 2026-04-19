@@ -10,18 +10,40 @@ use Semitexa\Tenancy\Configuration\TenancyConfiguration;
 
 final class TenancyConfigurationTest extends TestCase
 {
+    private const TENANCY_ENV_VARS = [
+        'TENANCY_ENABLED',
+        'TENANCY_REQUIRED',
+        'TENANCY_STRATEGY',
+        'TENANCY_HEADER_NAME',
+        'TENANCY_BASE_DOMAIN',
+        'TENANCY_PATH_EXCLUDED',
+        'TENANCY_QUERY_PARAM',
+        'TENANTS',
+        'TENANCY_DEFAULT_LOCALE',
+        'TENANCY_DEFAULT_ENVIRONMENT',
+    ];
+
+    /** @var array<string, string|false> */
+    private array $originalEnv = [];
+
+    protected function setUp(): void
+    {
+        foreach (self::TENANCY_ENV_VARS as $key) {
+            $this->originalEnv[$key] = getenv($key);
+            putenv($key);
+        }
+    }
+
     protected function tearDown(): void
     {
-        putenv('TENANCY_ENABLED');
-        putenv('TENANCY_REQUIRED');
-        putenv('TENANCY_STRATEGY');
-        putenv('TENANCY_HEADER_NAME');
-        putenv('TENANCY_BASE_DOMAIN');
-        putenv('TENANCY_PATH_EXCLUDED');
-        putenv('TENANCY_QUERY_PARAM');
-        putenv('TENANTS');
-        putenv('TENANCY_DEFAULT_LOCALE');
-        putenv('TENANCY_DEFAULT_ENVIRONMENT');
+        foreach ($this->originalEnv as $key => $value) {
+            if ($value === false) {
+                putenv($key);
+                continue;
+            }
+            putenv($key . '=' . $value);
+        }
+        $this->originalEnv = [];
     }
 
     #[Test]
