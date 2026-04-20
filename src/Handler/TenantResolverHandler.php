@@ -46,7 +46,7 @@ final class TenantResolverHandler
         $context = $this->resolver->resolve($request);
 
         if (!$context->isDefault()) {
-            $tenant = $this->tenants->findActive($context->tenantId);
+            $tenant = $this->tenants->findActive($context->getTenantId());
 
             if ($tenant === null) {
                 $this->events?->dispatch(new TenantNotFound($context));
