@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Semitexa\Tenancy\Handler;
 
 use Semitexa\Core\HttpResponse;
-use Semitexa\Core\Tenant\TenantContextInterface;
+use Semitexa\Tenancy\Context\TenantContext;
 
 interface TenantErrorResponderInterface
 {
-    public function tenantNotFound(TenantContextInterface $context): HttpResponse;
+    public function tenantNotFound(TenantContext $context): HttpResponse;
 
     public function tenantRequired(): HttpResponse;
 }

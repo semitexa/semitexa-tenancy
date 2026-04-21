@@ -8,8 +8,10 @@ use Semitexa\Core\Request;
 use Semitexa\Core\HttpResponse;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\Tenant\TenantContextAccess;
+use Semitexa\Core\Tenant\TenantContextInterface;
 use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Core\Tenant\TenantResolverInterface;
+use Semitexa\Tenancy\Context\TenantContext;
 use Semitexa\Tenancy\Event\TenantNotFound;
 use Semitexa\Tenancy\Event\TenantResolved;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
@@ -52,7 +54,7 @@ final class TenantResolverHandler
             if ($tenant === null) {
                 $this->events?->dispatch(new TenantNotFound($context));
 
-                return $this->responder->tenantNotFound($context);
+                return $this->responder->tenantNotFound($this->responderContext($context, $tenantId));
             }
 
             $this->tenantContextStore->set($context);
@@ -69,5 +71,14 @@ final class TenantResolverHandler
         $this->events?->dispatch(new TenantResolved($context));
 
         return null;
+    }
+
+    private function responderContext(TenantContextInterface $context, string $tenantId): TenantContext
+    {
+        if ($context instanceof TenantContext) {
+            return $context;
+        }
+
+        return TenantContext::fromResolution($tenantId, 'resolver');
     }
 }
