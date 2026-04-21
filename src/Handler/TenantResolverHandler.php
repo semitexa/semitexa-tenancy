@@ -7,6 +7,8 @@ namespace Semitexa\Tenancy\Handler;
 use Semitexa\Core\Request;
 use Semitexa\Core\HttpResponse;
 use Semitexa\Core\Event\EventDispatcherInterface;
+use Semitexa\Core\Tenant\TenantContextAccess;
+use Semitexa\Core\Tenant\TenantContextInterface;
 use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Core\Tenant\TenantResolverInterface;
 use Semitexa\Tenancy\Context\TenantContext;
@@ -44,14 +46,15 @@ final class TenantResolverHandler
     public function handle(Request $request): ?HttpResponse
     {
         $context = $this->resolver->resolve($request);
+        $tenantId = TenantContextAccess::tenantId($context);
 
-        if (!$context->isDefault()) {
-            $tenant = $this->tenants->findActive($context->getTenantId());
+        if ($tenantId !== null) {
+            $tenant = $this->tenants->findActive($tenantId);
 
             if ($tenant === null) {
                 $this->events?->dispatch(new TenantNotFound($context));
 
-                return $this->responder->tenantNotFound($context);
+                return $this->responder->tenantNotFound($this->responderContext($context, $tenantId));
             }
 
             $this->tenantContextStore->set($context);
@@ -68,5 +71,14 @@ final class TenantResolverHandler
         $this->events?->dispatch(new TenantResolved($context));
 
         return null;
+    }
+
+    private function responderContext(TenantContextInterface $context, string $tenantId): TenantContext
+    {
+        if ($context instanceof TenantContext) {
+            return $context;
+        }
+
+        return TenantContext::fromResolution($tenantId, 'resolver');
     }
 }
