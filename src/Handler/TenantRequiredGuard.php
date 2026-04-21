@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semitexa\Tenancy\Handler;
 
 use Semitexa\Core\HttpResponse;
+use Semitexa\Core\Tenant\TenantContextAccess;
 use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Tenancy\Context\TenantContextStore;
 
@@ -25,7 +26,7 @@ final class TenantRequiredGuard
     {
         $context = ($this->tenantContextStore ?? TenantContextStore::shared())->tryGet();
 
-        if ($context === null || $context->isDefault()) {
+        if (TenantContextAccess::isDefault($context)) {
             return HttpResponse::json([
                 'error' => 'This endpoint requires a tenant context',
             ], 403);
