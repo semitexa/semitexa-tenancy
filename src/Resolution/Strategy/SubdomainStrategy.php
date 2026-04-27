@@ -23,9 +23,12 @@ final class SubdomainStrategy implements TenantResolverStrategy
         $host = $request->getHost();
 
         // Legacy fallback for hand-built requests (CLI, tests) that may populate
-        // either SERVER_NAME or server_name on the server array.
+        // HTTP_HOST or either SERVER_NAME/server_name on the server array.
         if ($host === '') {
-            $serverName = trim($request->getServer('SERVER_NAME'));
+            $serverName = trim($request->getServer('HTTP_HOST'));
+            if ($serverName === '') {
+                $serverName = trim($request->getServer('SERVER_NAME'));
+            }
             if ($serverName === '') {
                 $serverName = trim($request->getServer('server_name'));
             }

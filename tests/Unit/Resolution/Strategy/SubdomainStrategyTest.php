@@ -116,6 +116,27 @@ final class SubdomainStrategyTest extends TestCase
     }
 
     #[Test]
+    public function falls_back_to_http_host(): void
+    {
+        $strategy = new SubdomainStrategy(baseDomain: 'example.com');
+        $request = new Request(
+            method: 'GET',
+            uri: '/',
+            headers: [],
+            query: [],
+            post: [],
+            server: ['HTTP_HOST' => 'acme.example.com:8080'],
+            cookies: [],
+        );
+
+        $context = $strategy->resolve($request);
+
+        $this->assertNotNull($context);
+        $this->assertSame('acme', $context->tenantId);
+        $this->assertSame('acme.example.com', $context->source);
+    }
+
+    #[Test]
     public function falls_back_to_lowercase_server_name(): void
     {
         $strategy = new SubdomainStrategy(baseDomain: 'example.com');
