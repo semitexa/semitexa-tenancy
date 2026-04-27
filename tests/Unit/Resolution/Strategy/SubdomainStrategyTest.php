@@ -116,6 +116,47 @@ final class SubdomainStrategyTest extends TestCase
     }
 
     #[Test]
+    public function falls_back_to_http_host(): void
+    {
+        $strategy = new SubdomainStrategy(baseDomain: 'example.com');
+        $request = new Request(
+            method: 'GET',
+            uri: '/',
+            headers: [],
+            query: [],
+            post: [],
+            server: ['HTTP_HOST' => 'acme.example.com:8080'],
+            cookies: [],
+        );
+
+        $context = $strategy->resolve($request);
+
+        $this->assertNotNull($context);
+        $this->assertSame('acme', $context->tenantId);
+        $this->assertSame('acme.example.com', $context->source);
+    }
+
+    #[Test]
+    public function falls_back_to_lowercase_server_name(): void
+    {
+        $strategy = new SubdomainStrategy(baseDomain: 'example.com');
+        $request = new Request(
+            method: 'GET',
+            uri: '/',
+            headers: [],
+            query: [],
+            post: [],
+            server: ['server_name' => 'acme.example.com'],
+            cookies: [],
+        );
+
+        $context = $strategy->resolve($request);
+
+        $this->assertNotNull($context);
+        $this->assertSame('acme', $context->tenantId);
+    }
+
+    #[Test]
     public function sanitizes_subdomain(): void
     {
         $strategy = new SubdomainStrategy(baseDomain: 'example.com');
@@ -136,15 +177,75 @@ final class SubdomainStrategyTest extends TestCase
         $this->assertNull($strategy->resolve($request));
     }
 
+    /**
+     * Regression: under Swoole, RequestFactory::fromSwoole() places the Host
+     * header in $request->headers['host'] and leaves $request->server with
+     * keys like request_method/request_uri/server_port — never HTTP_HOST.
+     * Earlier versions of this strategy read getServer('HTTP_HOST'), which
+     * silently failed on every real request. This test pins the fix.
+     */
+    #[Test]
+    public function resolves_tenant_from_swoole_shaped_request(): void
+    {
+        $strategy = new SubdomainStrategy(baseDomain: 'localhost');
+        $request = new Request(
+            method: 'GET',
+            uri: '/playground/tenancy',
+            headers: ['host' => 'playground.localhost'],
+            query: [],
+            post: [],
+            server: [
+                'request_method' => 'GET',
+                'request_uri' => '/playground/tenancy',
+                'server_port' => '9502',
+                'remote_addr' => '127.0.0.1',
+                'swoole_server' => '1',
+            ],
+            cookies: [],
+        );
+
+        $context = $strategy->resolve($request);
+
+        $this->assertNotNull($context);
+        $this->assertSame('playground', $context->tenantId);
+        $this->assertSame('subdomain', $context->strategy);
+        $this->assertSame('playground.localhost', $context->source);
+    }
+
+    #[Test]
+    public function resolves_tenant_when_host_header_carries_port_swoole_shape(): void
+    {
+        $strategy = new SubdomainStrategy(baseDomain: 'localhost');
+        $request = new Request(
+            method: 'GET',
+            uri: '/',
+            headers: ['host' => 'demo.localhost:9502'],
+            query: [],
+            post: [],
+            server: [],
+            cookies: [],
+        );
+
+        $context = $strategy->resolve($request);
+
+        $this->assertNotNull($context);
+        $this->assertSame('demo', $context->tenantId);
+        $this->assertSame('demo.localhost', $context->source);
+    }
+
+    /**
+     * Build a Request matching the shape RequestFactory::fromSwoole() produces:
+     * the Host header lives in $headers['host'] (lowercased), never in $server.
+     */
     private function makeRequest(string $host = ''): Request
     {
         return new Request(
             method: 'GET',
             uri: '/',
-            headers: [],
+            headers: $host !== '' ? ['host' => $host] : [],
             query: [],
             post: [],
-            server: $host !== '' ? ['HTTP_HOST' => $host] : [],
+            server: [],
             cookies: [],
         );
     }

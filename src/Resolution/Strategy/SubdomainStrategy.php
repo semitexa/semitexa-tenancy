@@ -16,18 +16,27 @@ final class SubdomainStrategy implements TenantResolverStrategy
 
     public function resolve(Request $request): ?TenantContext
     {
-        $host = $request->getServer('HTTP_HOST');
+        // Read the host from the request's Host header. Under Swoole the host header
+        // is in $request->headers['host'] and never in $request->server['HTTP_HOST'],
+        // so reading from getServer() would always miss in real traffic.
+        // Request::getHost() trims, strips port, lower-cases, and rejects malformed hosts.
+        $host = $request->getHost();
 
+        // Legacy fallback for hand-built requests (CLI, tests) that may populate
+        // HTTP_HOST or either SERVER_NAME/server_name on the server array.
         if ($host === '') {
-            $host = $request->getServer('SERVER_NAME');
-        }
+            $serverName = trim($request->getServer('HTTP_HOST'));
+            if ($serverName === '') {
+                $serverName = trim($request->getServer('SERVER_NAME'));
+            }
+            if ($serverName === '') {
+                $serverName = trim($request->getServer('server_name'));
+            }
 
-        if ($host === '') {
-            return null;
+            if ($serverName !== '') {
+                $host = strtolower(explode(':', $serverName)[0]);
+            }
         }
-
-        // Strip port
-        $host = strtolower(explode(':', $host)[0]);
 
         if ($host === '' || $host === $this->baseDomain) {
             return null;
