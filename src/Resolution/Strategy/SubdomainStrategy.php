@@ -22,10 +22,14 @@ final class SubdomainStrategy implements TenantResolverStrategy
         // Request::getHost() trims, strips port, lower-cases, and rejects malformed hosts.
         $host = $request->getHost();
 
-        // Legacy fallback for hand-built requests (CLI, tests) that only populate
-        // SERVER_NAME on the server array.
+        // Legacy fallback for hand-built requests (CLI, tests) that may populate
+        // either SERVER_NAME or server_name on the server array.
         if ($host === '') {
-            $serverName = trim($request->getServer('server_name'));
+            $serverName = trim($request->getServer('SERVER_NAME'));
+            if ($serverName === '') {
+                $serverName = trim($request->getServer('server_name'));
+            }
+
             if ($serverName !== '') {
                 $host = strtolower(explode(':', $serverName)[0]);
             }
