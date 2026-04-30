@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Semitexa\Tenancy\CLI;
+namespace Semitexa\Tenancy\Application\Console\Command;
 
 use Semitexa\Core\Attribute\AsCommand;
-use Semitexa\Core\Console\Command\BaseCommand;
+use Semitexa\Core\Console\BaseCommand;
 use Semitexa\Tenancy\Context\TenantContextStore;
 use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
 use Semitexa\Tenancy\TenancyBootstrapper;
