@@ -6,7 +6,7 @@ namespace Semitexa\Tenancy\Tests\Unit\Support;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Tenancy\Support\EnvReader;
+use Semitexa\Tenancy\Application\Service\EnvReader;
 
 final class EnvReaderTest extends TestCase
 {

@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Tenancy\Configuration\TenancyConfiguration;
 use Semitexa\Tenancy\Configuration\TenantStrategyFactory;
-use Semitexa\Tenancy\Resolution\TenantResolverChain;
+use Semitexa\Tenancy\Application\Service\Resolver\TenantResolverChain;
 
 final class TenantStrategyFactoryTest extends TestCase
 {

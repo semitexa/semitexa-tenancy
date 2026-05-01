@@ -11,10 +11,10 @@ use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
 use Semitexa\Tenancy\Attribute\AsTenancyLayersProvider;
 use Semitexa\Tenancy\Context\TenantContextStore;
-use Semitexa\Tenancy\Definition\LayerDefinition;
-use Semitexa\Tenancy\Resolution\MultilayerTenantResolver;
-use Semitexa\Tenancy\Resolution\TenantResolverChain;
-use Semitexa\Tenancy\TenancyBootstrapper;
+use Semitexa\Tenancy\Domain\Model\LayerDefinition;
+use Semitexa\Tenancy\Application\Service\Resolver\MultilayerTenantResolver;
+use Semitexa\Tenancy\Application\Service\Resolver\TenantResolverChain;
+use Semitexa\Tenancy\Application\Service\TenancyBootstrapper;
 
 final class TenancyBootstrapperTest extends TestCase
 {

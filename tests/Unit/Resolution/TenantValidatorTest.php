@@ -7,10 +7,10 @@ namespace Semitexa\Tenancy\Tests\Unit\Resolution;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Identification\Tenant;
-use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
-use Semitexa\Tenancy\Identification\TenantStatus;
-use Semitexa\Tenancy\Resolution\TenantValidator;
+use Semitexa\Tenancy\Domain\Model\Tenant;
+use Semitexa\Tenancy\Domain\Contract\TenantRepositoryInterface;
+use Semitexa\Tenancy\Domain\Enum\TenantStatus;
+use Semitexa\Tenancy\Application\Service\Resolver\TenantValidator;
 
 final class TenantValidatorTest extends TestCase
 {

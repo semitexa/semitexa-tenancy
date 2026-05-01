@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Context;
 
+use Semitexa\Tenancy\Domain\Model\Tenant;
+
 use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Support\CoroutineLocal;
 use Semitexa\Core\Tenant\TenantContextInterface;

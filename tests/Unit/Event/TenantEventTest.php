@@ -7,11 +7,11 @@ namespace Semitexa\Tenancy\Tests\Unit\Event;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Event\TenantNotFound;
-use Semitexa\Tenancy\Event\TenantResolved;
-use Semitexa\Tenancy\Event\TenantSwitched;
-use Semitexa\Tenancy\Identification\Tenant;
-use Semitexa\Tenancy\Identification\TenantStatus;
+use Semitexa\Tenancy\Domain\Event\TenantNotFound;
+use Semitexa\Tenancy\Domain\Event\TenantResolved;
+use Semitexa\Tenancy\Domain\Event\TenantSwitched;
+use Semitexa\Tenancy\Domain\Model\Tenant;
+use Semitexa\Tenancy\Domain\Enum\TenantStatus;
 
 final class TenantEventTest extends TestCase
 {

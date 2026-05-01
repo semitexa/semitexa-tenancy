@@ -7,7 +7,7 @@ namespace Semitexa\Tenancy\Tests\Unit\Resolution\Strategy;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
-use Semitexa\Tenancy\Resolution\Strategy\QueryParamStrategy;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\QueryParamStrategy;
 
 final class QueryParamStrategyTest extends TestCase
 {

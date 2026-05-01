@@ -10,8 +10,8 @@ use Semitexa\Core\Request;
 use Semitexa\Core\Tenant\Layer\OrganizationLayer;
 use Semitexa\Core\Tenant\Layer\OrganizationValue;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
-use Semitexa\Tenancy\Strategy\LayerStrategyAdapter;
+use Semitexa\Tenancy\Domain\Contract\TenantResolverStrategyInterface;
+use Semitexa\Tenancy\Application\Service\LayerStrategy\LayerStrategyAdapter;
 
 final class LayerStrategyAdapterTest extends TestCase
 {
@@ -20,7 +20,7 @@ final class LayerStrategyAdapterTest extends TestCase
     {
         $context = TenantContext::fromResolution('acme', 'header', 'X-Tenant-ID');
 
-        $resolver = $this->createMock(TenantResolverStrategy::class);
+        $resolver = $this->createMock(TenantResolverStrategyInterface::class);
         $resolver->method('resolve')->willReturn($context);
 
         $adapter = new LayerStrategyAdapter(
@@ -39,7 +39,7 @@ final class LayerStrategyAdapterTest extends TestCase
     #[Test]
     public function returns_null_when_no_context(): void
     {
-        $resolver = $this->createMock(TenantResolverStrategy::class);
+        $resolver = $this->createMock(TenantResolverStrategyInterface::class);
         $resolver->method('resolve')->willReturn(null);
 
         $adapter = new LayerStrategyAdapter(
@@ -54,7 +54,7 @@ final class LayerStrategyAdapterTest extends TestCase
     #[Test]
     public function returns_null_for_default_context(): void
     {
-        $resolver = $this->createMock(TenantResolverStrategy::class);
+        $resolver = $this->createMock(TenantResolverStrategyInterface::class);
         $resolver->method('resolve')->willReturn(TenantContext::default());
 
         $adapter = new LayerStrategyAdapter(

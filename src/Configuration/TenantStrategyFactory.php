@@ -4,13 +4,13 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Configuration;
 
-use Semitexa\Tenancy\Resolution\Strategy\HeaderStrategy;
-use Semitexa\Tenancy\Resolution\Strategy\PathStrategy;
-use Semitexa\Tenancy\Resolution\Strategy\QueryParamStrategy;
-use Semitexa\Tenancy\Resolution\Strategy\SubdomainStrategy;
-use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
-use Semitexa\Tenancy\Resolution\TenantResolverChain;
-use Semitexa\Tenancy\Resolution\TenantResolverInterface;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\HeaderStrategy;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\PathStrategy;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\QueryParamStrategy;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\SubdomainStrategy;
+use Semitexa\Tenancy\Domain\Contract\TenantResolverStrategyInterface;
+use Semitexa\Tenancy\Application\Service\Resolver\TenantResolverChain;
+use Semitexa\Tenancy\Domain\Contract\TenantResolverInterface;
 
 final class TenantStrategyFactory
 {
@@ -29,7 +29,7 @@ final class TenantStrategyFactory
         return new TenantResolverChain($strategies);
     }
 
-    private function buildStrategy(string $name, TenancyConfiguration $config): ?TenantResolverStrategy
+    private function buildStrategy(string $name, TenancyConfiguration $config): ?TenantResolverStrategyInterface
     {
         return match ($name) {
             'header' => new HeaderStrategy(headerName: $config->headerName),

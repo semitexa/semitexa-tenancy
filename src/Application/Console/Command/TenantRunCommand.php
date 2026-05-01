@@ -4,15 +4,17 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Application\Console\Command;
 
+use Semitexa\Tenancy\Domain\Model\Tenant;
+
 use Semitexa\Core\Attribute\AsCommand;
 use Semitexa\Core\Console\BaseCommand;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Tenancy\Context\TenantContext;
 use Semitexa\Tenancy\Context\TenantContextStore;
-use Semitexa\Tenancy\Event\TenantSwitched;
-use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
-use Semitexa\Tenancy\TenancyBootstrapper;
+use Semitexa\Tenancy\Domain\Event\TenantSwitched;
+use Semitexa\Tenancy\Domain\Contract\TenantRepositoryInterface;
+use Semitexa\Tenancy\Application\Service\TenancyBootstrapper;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;

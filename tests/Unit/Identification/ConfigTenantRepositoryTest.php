@@ -6,8 +6,8 @@ namespace Semitexa\Tenancy\Tests\Unit\Identification;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Tenancy\Identification\ConfigTenantRepository;
-use Semitexa\Tenancy\Identification\TenantStatus;
+use Semitexa\Tenancy\Application\Service\ConfigTenantRepository;
+use Semitexa\Tenancy\Domain\Enum\TenantStatus;
 
 final class ConfigTenantRepositoryTest extends TestCase
 {

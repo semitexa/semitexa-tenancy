@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Configuration;
 
-use Semitexa\Tenancy\Support\EnvReader;
+use Semitexa\Tenancy\Domain\Model\Tenant;
+
+use Semitexa\Tenancy\Application\Service\EnvReader;
 
 final readonly class TenancyConfiguration
 {
