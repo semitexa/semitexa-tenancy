@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Context;
 
-use Semitexa\Tenancy\Domain\Model\Tenant;
-
 use Semitexa\Core\Tenant\TenantContextInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
