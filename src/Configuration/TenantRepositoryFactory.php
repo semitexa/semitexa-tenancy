@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Configuration;
 
-use Semitexa\Tenancy\Identification\ConfigTenantRepository;
-use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
-use Semitexa\Tenancy\Support\EnvReader;
+use Semitexa\Tenancy\Application\Service\ConfigTenantRepository;
+use Semitexa\Tenancy\Domain\Contract\TenantRepositoryInterface;
+use Semitexa\Tenancy\Application\Service\EnvReader;
 
 final class TenantRepositoryFactory
 {

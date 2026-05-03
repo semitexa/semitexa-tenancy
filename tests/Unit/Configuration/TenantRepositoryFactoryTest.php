@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Tenancy\Configuration\TenancyConfiguration;
 use Semitexa\Tenancy\Configuration\TenantRepositoryFactory;
-use Semitexa\Tenancy\Identification\ConfigTenantRepository;
+use Semitexa\Tenancy\Application\Service\ConfigTenantRepository;
 
 final class TenantRepositoryFactoryTest extends TestCase
 {

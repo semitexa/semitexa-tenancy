@@ -7,7 +7,7 @@ namespace Semitexa\Tenancy\Tests\Unit\Resolution\Strategy;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
-use Semitexa\Tenancy\Resolution\Strategy\HeaderStrategy;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\HeaderStrategy;
 
 final class HeaderStrategyTest extends TestCase
 {

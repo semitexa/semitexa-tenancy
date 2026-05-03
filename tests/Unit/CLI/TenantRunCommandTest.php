@@ -6,9 +6,9 @@ namespace Semitexa\Tenancy\Tests\Unit\CLI;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Tenancy\CLI\TenantRunCommand;
+use Semitexa\Tenancy\Application\Console\Command\TenantRunCommand;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
-use Semitexa\Tenancy\Identification\ConfigTenantRepository;
+use Semitexa\Tenancy\Application\Service\ConfigTenantRepository;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

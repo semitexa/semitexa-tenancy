@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
-use Semitexa\Tenancy\Resolution\TenantResolverChain;
+use Semitexa\Tenancy\Domain\Contract\TenantResolverStrategyInterface;
+use Semitexa\Tenancy\Application\Service\Resolver\TenantResolverChain;
 
 final class TenantResolverChainTest extends TestCase
 {
@@ -68,7 +68,7 @@ final class TenantResolverChainTest extends TestCase
     {
         $callCount = 0;
 
-        $first = new class($callCount) implements TenantResolverStrategy {
+        $first = new class($callCount) implements TenantResolverStrategyInterface {
             public function __construct(private int &$callCount) {}
             public function resolve(Request $request): ?TenantContext
             {
@@ -77,7 +77,7 @@ final class TenantResolverChainTest extends TestCase
             }
         };
 
-        $second = new class($callCount) implements TenantResolverStrategy {
+        $second = new class($callCount) implements TenantResolverStrategyInterface {
             public function __construct(private int &$callCount) {}
             public function resolve(Request $request): ?TenantContext
             {
@@ -92,9 +92,9 @@ final class TenantResolverChainTest extends TestCase
         $this->assertSame(1, $callCount);
     }
 
-    private function createStrategy(?TenantContext $result): TenantResolverStrategy
+    private function createStrategy(?TenantContext $result): TenantResolverStrategyInterface
     {
-        return new class($result) implements TenantResolverStrategy {
+        return new class($result) implements TenantResolverStrategyInterface {
             public function __construct(private readonly ?TenantContext $result) {}
             public function resolve(Request $request): ?TenantContext
             {

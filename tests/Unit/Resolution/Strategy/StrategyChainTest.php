@@ -8,8 +8,8 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Resolution\Strategy\StrategyChain;
-use Semitexa\Tenancy\Resolution\Strategy\TenantResolverStrategy;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\StrategyChain;
+use Semitexa\Tenancy\Domain\Contract\TenantResolverStrategyInterface;
 
 final class StrategyChainTest extends TestCase
 {
@@ -17,13 +17,13 @@ final class StrategyChainTest extends TestCase
     public function returns_first_matching_context(): void
     {
         $chain = new StrategyChain([
-            new class implements TenantResolverStrategy {
+            new class implements TenantResolverStrategyInterface {
                 public function resolve(Request $request): ?TenantContext
                 {
                     return null;
                 }
             },
-            new class implements TenantResolverStrategy {
+            new class implements TenantResolverStrategyInterface {
                 public function resolve(Request $request): ?TenantContext
                 {
                     return TenantContext::fromResolution('demo', 'domain', 'demo.semitexa.test');
@@ -42,7 +42,7 @@ final class StrategyChainTest extends TestCase
     public function returns_null_when_nothing_matches(): void
     {
         $chain = new StrategyChain([
-            new class implements TenantResolverStrategy {
+            new class implements TenantResolverStrategyInterface {
                 public function resolve(Request $request): ?TenantContext
                 {
                     return null;

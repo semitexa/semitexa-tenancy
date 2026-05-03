@@ -1,0 +1,119 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Semitexa\Tenancy\Application\Console\Command;
+
+use Semitexa\Tenancy\Domain\Model\Tenant;
+
+use Semitexa\Core\Attribute\AsCommand;
+use Semitexa\Core\Console\BaseCommand;
+use Semitexa\Core\Event\EventDispatcherInterface;
+use Semitexa\Core\Tenant\TenantContextStoreInterface;
+use Semitexa\Tenancy\Context\TenantContext;
+use Semitexa\Tenancy\Context\TenantContextStore;
+use Semitexa\Tenancy\Domain\Event\TenantSwitched;
+use Semitexa\Tenancy\Domain\Contract\TenantRepositoryInterface;
+use Semitexa\Tenancy\Application\Service\TenancyBootstrapper;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Style\SymfonyStyle;
+
+/**
+ * Execute a CLI command within a specific tenant context.
+ *
+ * Usage:
+ *   bin/semitexa tenant:run acme cache:clear
+ *   bin/semitexa tenant:run globex queue:work
+ */
+#[AsCommand(name: 'tenant:run', description: 'Execute a command in a specific tenant context')]
+class TenantRunCommand extends BaseCommand
+{
+    private TenantRepositoryInterface $repository;
+    private ?EventDispatcherInterface $events;
+    private TenantContextStoreInterface $tenantContextStore;
+
+    public function __construct(
+        ?TenantRepositoryInterface $repository = null,
+        ?EventDispatcherInterface $events = null,
+        ?TenantContextStoreInterface $tenantContextStore = null,
+    ) {
+        parent::__construct();
+        $store = $tenantContextStore ?? TenantContextStore::shared();
+        $this->repository = $repository ?? (new TenancyBootstrapper($store))->getRepository();
+        $this->events = $events;
+        $this->tenantContextStore = $store;
+    }
+
+    protected function configure(): void
+    {
+        $this->setName('tenant:run')
+            ->setDescription('Execute a command in a specific tenant context')
+            ->addArgument('tenant', InputArgument::REQUIRED, 'Tenant ID')
+            ->addArgument('cmd', InputArgument::REQUIRED | InputArgument::IS_ARRAY, 'Command and its arguments');
+    }
+
+    protected function execute(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+
+        $tenantId = $input->getArgument('tenant');
+        $cmdParts = $input->getArgument('cmd');
+
+        // Validate tenant exists and is active
+        $tenant = $this->repository->findActive($tenantId);
+
+        if ($tenant === null) {
+            $io->error(sprintf('Tenant "%s" not found or not active.', $tenantId));
+            return Command::FAILURE;
+        }
+
+        // Set tenant context for the CLI session, preserving previous
+        $context = TenantContext::fromResolution($tenantId, 'cli', 'tenant:run');
+        $previous = $this->swapFallback($context);
+        $previousEventContext = $previous instanceof TenantContext ? $previous : TenantContext::default();
+
+        $this->events?->dispatch(new TenantSwitched(
+            previous: $previousEventContext,
+            current: $context,
+        ));
+
+        $io->text(sprintf('Running in tenant context: %s (%s)', $tenant->name, $tenant->id));
+
+        try {
+            $application = $this->getApplication();
+
+            if ($application === null) {
+                $io->error('Could not access the console application.');
+                return Command::FAILURE;
+            }
+
+            $commandInput = new StringInput(implode(' ', $cmdParts));
+
+            return $application->run($commandInput, $output);
+        } finally {
+            $this->swapFallback($previous);
+
+            $this->events?->dispatch(new TenantSwitched(
+                previous: $context,
+                current: $previousEventContext,
+            ));
+        }
+    }
+
+    private function swapFallback(?TenantContext $context): ?TenantContext
+    {
+        $previous = $this->tenantContextStore->tryGet();
+
+        if ($context instanceof TenantContext) {
+            $this->tenantContextStore->set($context);
+        } else {
+            $this->tenantContextStore->clear();
+        }
+
+        return $previous instanceof TenantContext ? $previous : null;
+    }
+}

@@ -8,7 +8,7 @@ use Semitexa\Core\Tenant\TenantContextInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerInterface;
 use Semitexa\Core\Tenant\Layer\TenantLayerValueInterface;
 use Semitexa\Tenancy\Exception\TenantRequiredException;
-use Semitexa\Tenancy\Support\EnvReader;
+use Semitexa\Tenancy\Application\Service\EnvReader;
 use Semitexa\Core\Tenant\Layer\OrganizationLayer;
 use Semitexa\Core\Tenant\Layer\OrganizationValue;
 use Semitexa\Core\Tenant\Layer\LocaleLayer;

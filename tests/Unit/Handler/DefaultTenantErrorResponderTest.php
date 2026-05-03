@@ -7,7 +7,7 @@ namespace Semitexa\Tenancy\Tests\Unit\Handler;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Handler\DefaultTenantErrorResponder;
+use Semitexa\Tenancy\Application\Service\DefaultTenantErrorResponder;
 
 final class DefaultTenantErrorResponderTest extends TestCase
 {

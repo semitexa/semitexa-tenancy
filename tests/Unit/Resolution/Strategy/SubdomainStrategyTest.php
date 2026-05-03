@@ -7,7 +7,7 @@ namespace Semitexa\Tenancy\Tests\Unit\Resolution\Strategy;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Request;
-use Semitexa\Tenancy\Resolution\Strategy\SubdomainStrategy;
+use Semitexa\Tenancy\Application\Service\Resolver\Strategy\SubdomainStrategy;
 
 final class SubdomainStrategyTest extends TestCase
 {
@@ -190,13 +190,13 @@ final class SubdomainStrategyTest extends TestCase
         $strategy = new SubdomainStrategy(baseDomain: 'localhost');
         $request = new Request(
             method: 'GET',
-            uri: '/playground/tenancy',
-            headers: ['host' => 'playground.localhost'],
+            uri: '/tenancy',
+            headers: ['host' => 'acme.localhost'],
             query: [],
             post: [],
             server: [
                 'request_method' => 'GET',
-                'request_uri' => '/playground/tenancy',
+                'request_uri' => '/tenancy',
                 'server_port' => '9502',
                 'remote_addr' => '127.0.0.1',
                 'swoole_server' => '1',
@@ -207,9 +207,9 @@ final class SubdomainStrategyTest extends TestCase
         $context = $strategy->resolve($request);
 
         $this->assertNotNull($context);
-        $this->assertSame('playground', $context->tenantId);
+        $this->assertSame('acme', $context->tenantId);
         $this->assertSame('subdomain', $context->strategy);
-        $this->assertSame('playground.localhost', $context->source);
+        $this->assertSame('acme.localhost', $context->source);
     }
 
     #[Test]

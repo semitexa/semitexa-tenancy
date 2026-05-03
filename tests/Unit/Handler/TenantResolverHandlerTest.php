@@ -11,13 +11,13 @@ use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
 use Semitexa\Tenancy\Context\TenantContextStore;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Event\TenantNotFound;
-use Semitexa\Tenancy\Event\TenantResolved;
-use Semitexa\Tenancy\Handler\TenantResolverHandler;
-use Semitexa\Tenancy\Identification\Tenant;
-use Semitexa\Tenancy\Identification\TenantRepositoryInterface;
-use Semitexa\Tenancy\Identification\TenantStatus;
-use Semitexa\Tenancy\Resolution\TenantResolverInterface;
+use Semitexa\Tenancy\Domain\Event\TenantNotFound;
+use Semitexa\Tenancy\Domain\Event\TenantResolved;
+use Semitexa\Tenancy\Application\Service\TenantResolverHandler;
+use Semitexa\Tenancy\Domain\Model\Tenant;
+use Semitexa\Tenancy\Domain\Contract\TenantRepositoryInterface;
+use Semitexa\Tenancy\Domain\Enum\TenantStatus;
+use Semitexa\Tenancy\Domain\Contract\TenantResolverInterface;
 
 final class TenantResolverHandlerTest extends TestCase
 {

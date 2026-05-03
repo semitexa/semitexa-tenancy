@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Tenancy\Context\CoroutineContextStore;
 use Semitexa\Tenancy\Context\TenantContext;
-use Semitexa\Tenancy\Handler\TenantRequiredGuard;
+use Semitexa\Tenancy\Application\Service\TenantRequiredGuard;
 
 final class TenantRequiredGuardTest extends TestCase
 {

@@ -6,8 +6,8 @@ namespace Semitexa\Tenancy\Tests\Unit\CLI;
 
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use Semitexa\Tenancy\CLI\TenantListCommand;
-use Semitexa\Tenancy\Identification\ConfigTenantRepository;
+use Semitexa\Tenancy\Application\Console\Command\TenantListCommand;
+use Semitexa\Tenancy\Application\Service\ConfigTenantRepository;
 use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Tester\CommandTester;
 
