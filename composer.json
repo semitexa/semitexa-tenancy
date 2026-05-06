@@ -12,6 +12,11 @@
       "Semitexa\\Tenancy\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Semitexa\\Tenancy\\Tests\\": "tests/"
+    }
+  },
   "extra": {
     "semitexa-module": {
       "extends": null
