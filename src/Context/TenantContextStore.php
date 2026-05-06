@@ -127,16 +127,20 @@ final class TenantContextStore implements ContextStoreInterface
         if (self::$registered) {
             return;
         }
+
+        if (class_exists(PerRequestStateRegistry::class)) {
+            PerRequestStateRegistry::register(
+                self::REGISTRY_NAME,
+                static function (): void {
+                    $shared = self::$shared;
+                    if ($shared !== null) {
+                        $shared->clear();
+                    }
+                    self::$fallback = null;
+                },
+            );
+        }
+
         self::$registered = true;
-        PerRequestStateRegistry::register(
-            self::REGISTRY_NAME,
-            static function (): void {
-                $shared = self::$shared;
-                if ($shared !== null) {
-                    $shared->clear();
-                }
-                self::$fallback = null;
-            },
-        );
     }
 }
