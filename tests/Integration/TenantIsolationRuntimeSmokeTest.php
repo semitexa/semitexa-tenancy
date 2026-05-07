@@ -53,11 +53,30 @@ use Semitexa\Tenancy\Context\TenantContextStore;
  */
 final class TenantIsolationRuntimeSmokeTest extends TestCase
 {
+    /** @var list<class-string> */
+    private const OPTIONAL_RUNTIME_CLASSES = [
+        CapabilityGrantSet::class,
+        PermissionGrantSet::class,
+        SubjectGrantSet::class,
+        LocaleContextStore::class,
+        AuthDemoStubAuthHandler::class,
+        AuthDemoUser::class,
+        RbacDecisionCache::class,
+    ];
+
     private Application $app;
     private TenantContextStoreInterface $tenantContextStore;
 
     protected function setUp(): void
     {
+        foreach (self::OPTIONAL_RUNTIME_CLASSES as $class) {
+            if (!class_exists($class)) {
+                self::markTestSkipped(sprintf(
+                    'Optional runtime dependency %s is unavailable in this package checkout',
+                    $class,
+                ));
+            }
+        }
         $this->app = new Application();
         $this->tenantContextStore = TenantContextStore::shared();
 
