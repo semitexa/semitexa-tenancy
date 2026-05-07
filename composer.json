@@ -1,32 +1,33 @@
 {
-  "name": "semitexa/tenancy",
-  "description": "Semitexa Tenancy - tenant resolution, scoped context, and multi-tenant application support",
-  "type": "semitexa-module",
-  "license": "MIT",
-  "require": {
-    "php": "^8.4",
-    "semitexa/core": "*"
-  },
-  "autoload": {
-    "psr-4": {
-      "Semitexa\\Tenancy\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Semitexa\\Tenancy\\Tests\\": "tests/"
-    }
-  },
-  "extra": {
-    "semitexa-module": {
-      "extends": null
-    }
-  },
-  "keywords": [
-    "semitexa",
-    "tenancy",
-    "multi-tenant",
-    "tenant-context",
-    "isolation"
-  ]
+    "name": "semitexa/tenancy",
+    "description": "Semitexa Tenancy - tenant resolution, scoped context, and multi-tenant application support",
+    "type": "semitexa-module",
+    "license": "MIT",
+    "require": {
+        "php": "^8.4",
+        "semitexa/core": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Semitexa\\Tenancy\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Semitexa\\Tenancy\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "semitexa-module": {
+            "extends": null
+        }
+    },
+    "keywords": [
+        "semitexa",
+        "tenancy",
+        "multi-tenant",
+        "tenant-context",
+        "isolation"
+    ],
+    "version": "v1.0.9"
 }
