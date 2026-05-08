@@ -28,6 +28,5 @@
         "multi-tenant",
         "tenant-context",
         "isolation"
-    ],
-    "version": "v1.0.9"
+    ]
 }
