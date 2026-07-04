@@ -189,6 +189,17 @@ final class TenancyBootstrapper implements TenancyBootstrapperInterface
 
     private function buildRepository(): TenantRepositoryInterface
     {
+        return self::repositoryFromEnvironment();
+    }
+
+    /**
+     * The environment-configured tenant repository (TENANTS compact string
+     * and/or TENANT_{ID}_* detail vars), buildable without standing up the
+     * full resolver/handler chain. {@see EnvironmentTenantRepository} exposes
+     * this through the DI container.
+     */
+    public static function repositoryFromEnvironment(): TenantRepositoryInterface
+    {
         $config = [];
 
         $compact = EnvReader::get('TENANTS');
