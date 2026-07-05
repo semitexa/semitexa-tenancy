@@ -62,6 +62,63 @@ final class TenancyBootstrapperTest extends TestCase
 
         $this->assertInstanceOf(TenantResolverChain::class, $bootstrapper->getResolver());
     }
+
+    #[Test]
+    public function a_failing_layer_provider_surfaces_a_boot_diagnostic(): void
+    {
+        // A tenant-layer provider that throws must not vanish: its isolation
+        // layer drops from the resolved set, so a silent skip weakens tenant
+        // scoping with no signal.
+        $diagnostics = \Semitexa\Core\Discovery\BootDiagnostics::begin();
+        $classDiscovery = $this->createMock(ClassDiscovery::class);
+        $classDiscovery->method('findClassesWithAttribute')
+            ->with(AsTenancyLayersProvider::class)
+            ->willReturn([ThrowingTenancyLayersProvider::class]);
+
+        new TenancyBootstrapper(new TenantContextStore(), $classDiscovery);
+
+        $warnings = array_filter(
+            $diagnostics->getWarnings(),
+            static fn ($w): bool => $w->component === 'TenancyBootstrapper',
+        );
+        $this->assertNotSame([], $warnings, 'A failing tenant-layer provider must surface a diagnostic.');
+        $this->assertStringContainsString('isolation layer is absent', reset($warnings)->message);
+    }
+
+    #[Test]
+    public function a_provider_without_a_layers_method_surfaces_a_boot_diagnostic(): void
+    {
+        $diagnostics = \Semitexa\Core\Discovery\BootDiagnostics::begin();
+        $classDiscovery = $this->createMock(ClassDiscovery::class);
+        $classDiscovery->method('findClassesWithAttribute')
+            ->with(AsTenancyLayersProvider::class)
+            ->willReturn([MalformedTenancyLayersProvider::class]);
+
+        new TenancyBootstrapper(new TenantContextStore(), $classDiscovery);
+
+        $warnings = array_filter(
+            $diagnostics->getWarnings(),
+            static fn ($w): bool => $w->component === 'TenancyBootstrapper',
+        );
+        $this->assertNotSame([], $warnings, 'A provider without layers() must surface a diagnostic.');
+        $this->assertStringContainsString('no layers() method', reset($warnings)->message);
+    }
+}
+
+#[AsTenancyLayersProvider]
+final class ThrowingTenancyLayersProvider
+{
+    /** @return list<LayerDefinition> */
+    public function layers(): array
+    {
+        throw new \RuntimeException('layer provider boom');
+    }
+}
+
+#[AsTenancyLayersProvider]
+final class MalformedTenancyLayersProvider
+{
+    // Deliberately no layers() method.
 }
 
 #[AsTenancyLayersProvider]
