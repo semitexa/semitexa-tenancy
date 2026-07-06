@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Tests\Unit;
 
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Attribute\SatisfiesRepositoryContract;
@@ -43,8 +44,19 @@ final class EnvironmentTenantRepositoryTest extends TestCase
     }
 
     #[Test]
+    #[RunInSeparateProcess]
     public function delegates_to_the_environment_configured_repository(): void
     {
+        // Hermetic environment: the repository merges the TENANTS compact
+        // string with ambient TENANT_{ID}_* detail vars — a containerized
+        // runner (release clone) injects real tenants through compose and
+        // would inflate the count. Runs in a separate process so unsetting
+        // them cannot leak into other tests.
+        foreach (array_keys(getenv()) as $key) {
+            if (str_starts_with((string) $key, 'TENANT_')) {
+                putenv((string) $key);
+            }
+        }
         putenv('TENANTS=acme:Acme:active,dormant:Dormant:suspended');
 
         $repository = new EnvironmentTenantRepository();
