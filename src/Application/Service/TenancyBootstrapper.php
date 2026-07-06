@@ -6,6 +6,7 @@ namespace Semitexa\Tenancy\Application\Service;
 
 use Semitexa\Tenancy\Domain\Model\Tenant;
 
+use Semitexa\Core\Discovery\BootDiagnostics;
 use Semitexa\Core\Discovery\ClassDiscovery;
 use Semitexa\Core\Event\EventDispatcherInterface;
 use Semitexa\Core\HttpResponse;
@@ -135,6 +136,13 @@ final class TenancyBootstrapper implements TenancyBootstrapperInterface
 
         foreach ($providerClasses as $class) {
             if (!method_exists($class, 'layers')) {
+                // A class carrying #[AsTenancyLayersProvider] with no layers()
+                // method is a malformed provider, not a benign skip: its
+                // intended tenant-scoping layers never register.
+                BootDiagnostics::current()->invalidUsage(
+                    'TenancyBootstrapper',
+                    "#[AsTenancyLayersProvider] {$class} has no layers() method; its tenant-scoping layers are not registered.",
+                );
                 continue;
             }
             try {
@@ -147,8 +155,19 @@ final class TenancyBootstrapper implements TenancyBootstrapperInterface
                         }
                     }
                 }
-            } catch (\Throwable) {
-                // Module layer discovery is best-effort — skip modules that fail
+            } catch (\Throwable $e) {
+                // A tenant-layer provider that fails to construct or enumerate
+                // its layers is a tenant-ISOLATION defect, not a best-effort
+                // skip: the layer silently drops out of the resolved set, so
+                // requests resolve against a weaker tenant scope with no
+                // signal. Surface it through BootDiagnostics (the same channel
+                // the pipeline/event/service-contract registries use) instead
+                // of vanishing.
+                BootDiagnostics::current()->invalidUsage(
+                    'TenancyBootstrapper',
+                    "tenant-layer provider {$class} failed; its isolation layer is absent from the resolved set: " . $e->getMessage(),
+                    $e,
+                );
                 continue;
             }
         }
@@ -188,6 +207,17 @@ final class TenancyBootstrapper implements TenancyBootstrapperInterface
     }
 
     private function buildRepository(): TenantRepositoryInterface
+    {
+        return self::repositoryFromEnvironment();
+    }
+
+    /**
+     * The environment-configured tenant repository (TENANTS compact string
+     * and/or TENANT_{ID}_* detail vars), buildable without standing up the
+     * full resolver/handler chain. {@see EnvironmentTenantRepository} exposes
+     * this through the DI container.
+     */
+    public static function repositoryFromEnvironment(): TenantRepositoryInterface
     {
         $config = [];
 
