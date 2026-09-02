@@ -39,11 +39,11 @@ final class TenantContext implements TenantContextInterface
     public function getLayer(TenantLayerInterface $layer): ?TenantLayerValueInterface
     {
         $id = $layer->id();
-        
+
         if (!isset($this->layers[$id])) {
             return $layer->defaultValue();
         }
-        
+
         return $this->layers[$id];
     }
 
@@ -128,15 +128,15 @@ final class TenantContext implements TenantContextInterface
     public static function fromQueuePayload(array $payload): self
     {
         $layers = [];
-        
+
         if (isset($payload['tenantId'])) {
             $layers[] = new OrganizationValue($payload['tenantId']);
         }
-        
+
         if (isset($payload['locale'])) {
             $layers[] = LocaleValue::fromCode($payload['locale']) ?? LocaleValue::default();
         }
-        
+
         if (isset($payload['environment'])) {
             $layers[] = EnvironmentValue::fromValue($payload['environment']);
         }
@@ -144,7 +144,7 @@ final class TenantContext implements TenantContextInterface
         $context = new self(...$layers);
         $context->strategy = $payload['strategy'] ?? 'queue';
         $context->source = 'queue';
-        
+
         return $context;
     }
 
@@ -170,7 +170,7 @@ final class TenantContext implements TenantContextInterface
     public function requireTenantId(): string
     {
         $org = $this->getLayer(new OrganizationLayer());
-        
+
         if ($org === null || $org->rawValue() === 'default') {
             throw new TenantRequiredException('Tenant ID is required but not set in current context');
         }
