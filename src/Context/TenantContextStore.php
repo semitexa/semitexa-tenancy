@@ -25,11 +25,17 @@ final class TenantContextStore implements ContextStoreInterface
 
     private static bool $registered = false;
 
-    public function __construct()
-    {
-        self::$shared ??= $this;
-    }
-
+    /**
+     * The process-wide instance, created on first ask.
+     *
+     * A constructor used to seed this with `self::$shared ??= $this`, and the
+     * container never called it — container-managed classes are built with
+     * newInstanceWithoutConstructor(). Nothing broke, because every piece of
+     * state this class holds lives in CoroutineLocal under class constants, so
+     * one instance is interchangeable with another. The line was doing nothing
+     * in either direction; it is gone rather than moved to initialize(), where
+     * it would still do nothing.
+     */
     public static function shared(): self
     {
         return self::$shared ??= new self();
