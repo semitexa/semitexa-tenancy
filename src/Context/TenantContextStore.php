@@ -25,11 +25,17 @@ final class TenantContextStore implements ContextStoreInterface
 
     private static bool $registered = false;
 
-    public function __construct()
-    {
-        self::$shared ??= $this;
-    }
-
+    /**
+     * The process-wide instance, created on first ask.
+     *
+     * A constructor used to seed this with `self::$shared ??= $this`, and the
+     * container never called it — container-managed classes are built with
+     * newInstanceWithoutConstructor(). Nothing broke, because every piece of
+     * state this class holds lives in CoroutineLocal under class constants, so
+     * one instance is interchangeable with another. The line was doing nothing
+     * in either direction; it is gone rather than moved to initialize(), where
+     * it would still do nothing.
+     */
     public static function shared(): self
     {
         return self::$shared ??= new self();
@@ -77,7 +83,24 @@ final class TenantContextStore implements ContextStoreInterface
 
     public function clear(): void
     {
-        if ($this->inCoroutine()) {
+        self::clearCurrent();
+    }
+
+    /**
+     * Wipe the tenant context of the current execution, instance or not.
+     *
+     * Every piece of state this class holds lives in CoroutineLocal under
+     * class constants, or in a static fallback, so clearing needs no
+     * particular instance — and must not wait for one. The per-request
+     * callback used to go through self::$shared and skipped the wipe entirely
+     * whenever nobody had called shared(): a container-injected store that
+     * resolved a tenant would leave that tenant's context behind for whatever
+     * ran next on the same coroutine. Raised in review of
+     * semitexa-tenancy#33.
+     */
+    public static function clearCurrent(): void
+    {
+        if (class_exists(\Swoole\Coroutine::class, false) && \Swoole\Coroutine::getCid() > 0) {
             CoroutineLocal::remove(self::CONTEXT_KEY);
             CoroutineLocal::remove(self::LOCK_KEY);
 
@@ -132,10 +155,11 @@ final class TenantContextStore implements ContextStoreInterface
             PerRequestStateRegistry::register(
                 self::REGISTRY_NAME,
                 static function (): void {
-                    $shared = self::$shared;
-                    if ($shared !== null) {
-                        $shared->clear();
-                    }
+                    // Not through self::$shared: an injected store can set a
+                    // tenant while nothing ever called shared(), and this
+                    // callback is the only thing standing between that tenant
+                    // and the next unit of work on this coroutine.
+                    self::clearCurrent();
                     self::$fallback = null;
                 },
             );
