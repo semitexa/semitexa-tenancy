@@ -151,19 +151,21 @@ final class TenantContextStore implements ContextStoreInterface
             return;
         }
 
-        if (class_exists(PerRequestStateRegistry::class)) {
-            PerRequestStateRegistry::register(
-                self::REGISTRY_NAME,
-                static function (): void {
-                    // Not through self::$shared: an injected store can set a
-                    // tenant while nothing ever called shared(), and this
-                    // callback is the only thing standing between that tenant
-                    // and the next unit of work on this coroutine.
-                    self::clearCurrent();
-                    self::$fallback = null;
-                },
-            );
-        }
+        // semitexa/core is the sole require of this package, so the registry
+        // is always there; the guard only decided whether per-request cleanup
+        // got registered at all, and skipping it silently is how a tenant
+        // leaks into the next unit of work.
+        PerRequestStateRegistry::register(
+            self::REGISTRY_NAME,
+            static function (): void {
+                // Not through self::$shared: an injected store can set a
+                // tenant while nothing ever called shared(), and this
+                // callback is the only thing standing between that tenant
+                // and the next unit of work on this coroutine.
+                self::clearCurrent();
+                self::$fallback = null;
+            },
+        );
 
         self::$registered = true;
     }
