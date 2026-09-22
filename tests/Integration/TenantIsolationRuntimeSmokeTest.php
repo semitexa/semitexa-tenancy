@@ -12,7 +12,6 @@ use Semitexa\Authorization\Domain\Model\PermissionGrantSet;
 use Semitexa\Authorization\Domain\Model\SubjectGrantSet;
 use Semitexa\Core\Application;
 use Semitexa\Core\Lifecycle\CurrentRequestStore;
-use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Semitexa\Core\Lifecycle\TestStateResetRegistry;
 use Semitexa\Core\Request;
 use Semitexa\Core\Tenant\TenantContextStoreInterface;
