@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Application\Service;
 
-use Semitexa\Tenancy\Domain\Model\Tenant;
-
 use Semitexa\Core\Discovery\BootDiagnostics;
 use Semitexa\Core\Discovery\ClassDiscovery;
 use Semitexa\Core\Event\EventDispatcherInterface;

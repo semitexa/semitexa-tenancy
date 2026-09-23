@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Semitexa\Tenancy\Application\Console\Command;
 
-use Semitexa\Tenancy\Domain\Model\Tenant;
-
 use Semitexa\Core\Attribute\AsCommand;
 use Semitexa\Core\Console\BaseCommand;
 use Semitexa\Core\Event\EventDispatcherInterface;

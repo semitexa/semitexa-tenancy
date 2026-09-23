@@ -6,8 +6,6 @@ namespace Semitexa\Tenancy\Application\Service\Resolver\Strategy;
 
 use Semitexa\Tenancy\Domain\Contract\TenantResolverStrategyInterface;
 
-use Semitexa\Tenancy\Domain\Model\Tenant;
-
 use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\TenantContext;
 use Semitexa\Tenancy\Application\Service\TenantIdSanitizer;

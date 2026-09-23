@@ -11,7 +11,6 @@ use Semitexa\Core\Tenant\Layer\OrganizationLayer;
 use Semitexa\Core\Tenant\Layer\OrganizationValue;
 use Semitexa\Core\Tenant\TenantLayerStrategyInterface;
 use Semitexa\Tenancy\Domain\Contract\TenantResolverStrategyInterface;
-use Semitexa\Tenancy\Context\TenantContext;
 
 class OrganizationStrategy implements TenantLayerStrategyInterface
 {

@@ -6,8 +6,6 @@ namespace Semitexa\Tenancy\Application\Service;
 
 use Semitexa\Tenancy\Domain\Contract\TenantErrorResponderInterface;
 
-use Semitexa\Tenancy\Domain\Model\Tenant;
-
 use Semitexa\Core\HttpResponse;
 use Semitexa\Tenancy\Context\TenantContext;
 
