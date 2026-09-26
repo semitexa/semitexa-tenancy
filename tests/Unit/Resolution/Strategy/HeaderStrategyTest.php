@@ -100,7 +100,32 @@ final class HeaderStrategyTest extends TestCase
         $this->assertSame('my-tenant_01', $context->tenantId);
     }
 
-    private function makeRequest(array $headers = []): Request
+    #[Test]
+    public function ignores_the_header_from_an_untrusted_peer(): void
+    {
+        // Anyone can send X-Tenant-ID; from a client that is not a trusted
+        // proxy it must not choose the tenant.
+        $request = $this->makeRequest(headers: ['X-Tenant-ID' => 'victim'], remoteAddr: '203.0.113.9');
+
+        $this->assertNull((new HeaderStrategy())->resolve($request));
+    }
+
+    #[Test]
+    public function honours_the_header_from_a_listed_trusted_proxy(): void
+    {
+        $previous = getenv('TRUSTED_PROXIES');
+        putenv('TRUSTED_PROXIES=10.0.0.0/8');
+        try {
+            $request = $this->makeRequest(headers: ['X-Tenant-ID' => 'acme'], remoteAddr: '10.1.2.3');
+
+            $this->assertSame('acme', (new HeaderStrategy())->resolve($request)?->tenantId);
+        } finally {
+            putenv($previous === false ? 'TRUSTED_PROXIES' : 'TRUSTED_PROXIES=' . $previous);
+        }
+    }
+
+    /** Loopback by default: a gateway on the same host, which is trusted. */
+    private function makeRequest(array $headers = [], string $remoteAddr = '127.0.0.1'): Request
     {
         return new Request(
             method: 'GET',
@@ -108,7 +133,7 @@ final class HeaderStrategyTest extends TestCase
             headers: $headers,
             query: [],
             post: [],
-            server: [],
+            server: ['remote_addr' => $remoteAddr],
             cookies: [],
         );
     }

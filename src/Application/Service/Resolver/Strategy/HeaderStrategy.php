@@ -10,6 +10,16 @@ use Semitexa\Core\Request;
 use Semitexa\Tenancy\Context\TenantContext;
 use Semitexa\Tenancy\Application\Service\TenantIdSanitizer;
 
+/**
+ * Tenant from a request header (X-Tenant-ID by default) — honoured only when
+ * the request comes from a trusted proxy: loopback, or a peer listed in
+ * TRUSTED_PROXIES, the same rule as X-Forwarded-Proto.
+ *
+ * A header is something any client can send. Trusted from anyone, it let an
+ * anonymous caller pick whichever tenant it liked; the header strategy is for
+ * a gateway in front of the app that authenticates the caller and sets (or
+ * overwrites) the header itself.
+ */
 final class HeaderStrategy implements TenantResolverStrategyInterface
 {
     public function __construct(
@@ -19,6 +29,10 @@ final class HeaderStrategy implements TenantResolverStrategyInterface
 
     public function resolve(Request $request): ?TenantContext
     {
+        if (!$request->isTrustedForwardedRequest()) {
+            return null;
+        }
+
         $value = $request->getHeader($this->headerName);
 
         if ($value === null || $value === '') {
