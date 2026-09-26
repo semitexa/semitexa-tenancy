@@ -12,6 +12,7 @@ use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Tenancy\Application\Service\TenancyBootstrapper;
 use Semitexa\Tenancy\Application\Service\TenancyBootstrapperFactory;
 use Semitexa\Tenancy\Context\TenantContextStore;
+use Semitexa\Tenancy\Domain\Model\LayerDefinition;
 
 /**
  * Core calls the factory once per request; the bootstrapper it returns is
@@ -20,12 +21,29 @@ use Semitexa\Tenancy\Context\TenantContextStore;
  */
 final class TenancyBootstrapperFactoryTest extends TestCase
 {
+    private string|false $savedTenants = false;
+
+    /** @var list<LayerDefinition>|null */
+    private ?array $savedLayerDefinitions = null;
+
+    protected function setUp(): void
+    {
+        // Both are process-global: snapshot them, start each test from an
+        // empty discovery cache, and put the originals back in tearDown().
+        $this->savedTenants = getenv('TENANTS');
+        $this->savedLayerDefinitions = self::layerDefinitions()->getValue();
+        self::layerDefinitions()->setValue(null, null);
+    }
+
     protected function tearDown(): void
     {
-        (new \ReflectionClass(TenancyBootstrapper::class))
-            ->getProperty('discoveredLayerDefinitions')
-            ->setValue(null, null);
-        putenv('TENANTS');
+        self::layerDefinitions()->setValue(null, $this->savedLayerDefinitions);
+        putenv($this->savedTenants === false ? 'TENANTS' : 'TENANTS=' . $this->savedTenants);
+    }
+
+    private static function layerDefinitions(): \ReflectionProperty
+    {
+        return new \ReflectionProperty(TenancyBootstrapper::class, 'discoveredLayerDefinitions');
     }
 
     #[Test]
