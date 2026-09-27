@@ -73,8 +73,11 @@ final class TenancyBootstrapperFactory implements TenancyBootstrapperFactoryInte
         $this->builtFrom = $from;
 
         $self = \WeakReference::create($this);
+        // One key per factory instance: the registry replaces a callback
+        // registered under the same name, so a shared key would reset only
+        // the last factory and leave an earlier one's stale memo in place.
         TestStateResetRegistry::register(
-            self::class,
+            self::class . '#' . spl_object_id($this),
             static function () use ($self): void {
                 $factory = $self->get();
                 if ($factory !== null) {
