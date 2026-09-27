@@ -8,6 +8,7 @@ use Psr\Container\ContainerInterface;
 use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Discovery\ClassDiscovery;
 use Semitexa\Core\Event\EventDispatcherInterface;
+use Semitexa\Core\Lifecycle\TestStateResetRegistry;
 use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Core\Tenant\TenancyBootstrapperFactoryInterface;
 use Semitexa\Core\Tenant\TenancyBootstrapperInterface;
@@ -25,6 +26,11 @@ use Semitexa\Core\Tenant\TenancyBootstrapperInterface;
  * The memo lives on this (container-managed) factory instance, not in static
  * state: a fresh container — e.g. a test that changed TENANT_* env vars and
  * boots a new one — gets a fresh factory and re-reads the environment.
+ *
+ * Tests that keep the process-wide container but change TENANT_* env vars
+ * between cases rely on {@see TestStateResetRegistry::resetAllForTesting()}
+ * to drop the memo, so an Application booted by an earlier test does not
+ * hand its stale tenant repository to a later one.
  */
 #[SatisfiesServiceContract(of: TenancyBootstrapperFactoryInterface::class)]
 final class TenancyBootstrapperFactory implements TenancyBootstrapperFactoryInterface
@@ -65,6 +71,21 @@ final class TenancyBootstrapperFactory implements TenancyBootstrapperFactoryInte
         );
         $this->built = $bootstrapper;
         $this->builtFrom = $from;
+
+        $self = \WeakReference::create($this);
+        // One key per factory instance: the registry replaces a callback
+        // registered under the same name, so a shared key would reset only
+        // the last factory and leave an earlier one's stale memo in place.
+        TestStateResetRegistry::register(
+            self::class . '#' . spl_object_id($this),
+            static function () use ($self): void {
+                $factory = $self->get();
+                if ($factory !== null) {
+                    $factory->built = null;
+                    $factory->builtFrom = null;
+                }
+            },
+        );
 
         return $bootstrapper;
     }
