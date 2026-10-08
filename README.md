@@ -2,6 +2,10 @@
 
 Tenant resolution, scoped context, and multi-tenant application support.
 
+## Install
+
+Included in every project created by the installer (https://semitexa.com/install.sh).
+
 ## Purpose
 
 Resolves the current tenant per request through a configurable chain of strategies (path, subdomain, header, query param). Stores the resolved tenant in coroutine-safe context for downstream use by ORM, Cache, Storage, and other tenant-aware packages.
@@ -19,3 +23,7 @@ Depends on Core. Depended on by ORM, Cache, Search, Media, Scheduler, Workflow, 
 - Multi-layer tenancy via `LayerDefinition`
 - `#[AsTenantLayerStrategy]` attribute for custom layers
 - `TenantRepositoryInterface` for tenant lookup (config or database-backed)
+
+## Docs
+
+https://semitexa.com/docs/platform/tenancy-resolution
