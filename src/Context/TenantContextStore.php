@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Semitexa\Tenancy\Context;
 
 use Semitexa\Core\Attribute\SatisfiesServiceContract;
+use Semitexa\Core\Lifecycle\CarriedContext;
 use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Semitexa\Core\Support\CoroutineLocal;
 use Semitexa\Core\Tenant\TenantContextInterface;
@@ -166,6 +167,8 @@ final class TenantContextStore implements ContextStoreInterface
                 self::$fallback = null;
             },
         );
+        // Work run after the response (an Async handler) gets the request's tenant.
+        CarriedContext::carry(self::CONTEXT_KEY, self::LOCK_KEY);
 
         self::$registered = true;
     }
