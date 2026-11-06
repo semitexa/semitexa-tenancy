@@ -31,7 +31,11 @@ final class PlainPayload
 }
 
 #[TenantIsolated]
-final class IsolatedHandler
+class IsolatedHandler
+{
+}
+
+final class ChildOfIsolatedHandler extends IsolatedHandler
 {
 }
 
@@ -59,6 +63,14 @@ final class TenantIsolatedListenerTest extends TestCase
         $this->expectException(AccessDeniedException::class);
 
         $this->listener(null)->handle($this->context(new PlainPayload(), [['class' => IsolatedHandler::class]]));
+    }
+
+    #[Test]
+    public function a_subclass_of_an_isolated_handler_is_refused_too(): void
+    {
+        $this->expectException(AccessDeniedException::class);
+
+        $this->listener(null)->handle($this->context(new PlainPayload(), [['class' => ChildOfIsolatedHandler::class]]));
     }
 
     #[Test]

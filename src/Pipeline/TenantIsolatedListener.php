@@ -34,15 +34,29 @@ final class TenantIsolatedListener implements PipelineListenerInterface
 
     private static function isolated(RequestPipelineContext $context): bool
     {
-        // Up the class chain: a payload with payload parts arrives as a generated subclass.
-        for ($class = new \ReflectionClass($context->requestDto); $class !== false; $class = $class->getParentClass()) {
-            if ($class->getAttributes(TenantIsolated::class) !== []) {
-                return true;
-            }
+        if (self::marked($context->requestDto::class)) {
+            return true;
         }
         foreach ($context->route->handlers as $handler) {
             $name = $handler['class'] ?? null;
-            if (is_string($name) && class_exists($name) && (new \ReflectionClass($name))->getAttributes(TenantIsolated::class) !== []) {
+            if (is_string($name) && class_exists($name) && self::marked($name)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Up the class chain: attributes are not inherited, and a payload with payload
+     * parts arrives as a generated subclass.
+     *
+     * @param class-string $name
+     */
+    private static function marked(string $name): bool
+    {
+        for ($class = new \ReflectionClass($name); $class !== false; $class = $class->getParentClass()) {
+            if ($class->getAttributes(TenantIsolated::class) !== []) {
                 return true;
             }
         }
