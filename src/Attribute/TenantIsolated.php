@@ -7,11 +7,9 @@ namespace Semitexa\Tenancy\Attribute;
 use Attribute;
 
 /**
- * Marks a handler or service as tenant-isolated.
- *
- * When present on a handler class, the framework should enforce that
- * a valid (non-default) tenant context exists before executing the handler.
- * If no tenant is set, TenantRequiredGuard returns a 403.
+ * Marks a payload or a handler as tenant-isolated: it runs only with a tenant
+ * resolved. Without one the request is refused with a 403 before the handler
+ * runs, by {@see \Semitexa\Tenancy\Pipeline\TenantIsolatedListener}.
  *
  * Usage:
  *   #[TenantIsolated]
