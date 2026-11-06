@@ -52,6 +52,7 @@ use Semitexa\Core\Attribute\Capability;
         // Silent: on a model without #[TenantScoped], forTenant() filters nothing and every tenant reads every row.
         // #[TenantIsolated] refuses nothing: only the project graph reads it.
         // A timer has no tenant: inject TenantFanoutInterface; eachTenant(fn (string $tenantId) => ...) binds each in turn.
+        // With an empty TENANTS it runs once as 'default' and binds nothing: tryGet() is then null.
         USAGE,
 )]
 final class Capabilities
