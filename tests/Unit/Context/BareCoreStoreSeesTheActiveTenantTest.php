@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Semitexa\Core\Support\CoroutineLocal;
 use Semitexa\Core\Tenant\DefaultTenantContextStore;
 use Semitexa\Core\Tenant\TenantContextAccess;
+use Semitexa\Core\Tenant\TenantContextInterface;
 use Semitexa\Tenancy\Context\TenantContext;
 use Semitexa\Tenancy\Context\TenantContextStore;
 use Semitexa\Tenancy\Exception\TenantContextImmutableException;
@@ -21,9 +22,37 @@ use Semitexa\Tenancy\Exception\TenantContextImmutableException;
  */
 final class BareCoreStoreSeesTheActiveTenantTest extends TestCase
 {
+    private ?TenantContextInterface $fallbackBefore = null;
+
+    private mixed $slotBefore = null;
+
+    /**
+     * Outside a coroutine the store's static and the slot are process-wide:
+     * what another fixture left in them is put back, not wiped.
+     */
+    protected function setUp(): void
+    {
+        $fallback = self::fallbackProperty()->getValue();
+        $this->fallbackBefore = $fallback instanceof TenantContextInterface ? $fallback : null;
+        $this->slotBefore = CoroutineLocal::get(DefaultTenantContextStore::CONTEXT_KEY);
+
+        self::fallbackProperty()->setValue(null, null);
+        CoroutineLocal::remove(DefaultTenantContextStore::CONTEXT_KEY);
+    }
+
     protected function tearDown(): void
     {
-        TenantContextStore::clearCurrent();
+        self::fallbackProperty()->setValue(null, $this->fallbackBefore);
+        if ($this->slotBefore === null) {
+            CoroutineLocal::remove(DefaultTenantContextStore::CONTEXT_KEY);
+        } else {
+            CoroutineLocal::set(DefaultTenantContextStore::CONTEXT_KEY, $this->slotBefore);
+        }
+    }
+
+    private static function fallbackProperty(): \ReflectionProperty
+    {
+        return new \ReflectionProperty(TenantContextStore::class, 'fallback');
     }
 
     #[Test]
@@ -81,8 +110,10 @@ final class BareCoreStoreSeesTheActiveTenantTest extends TestCase
         $store = new TenantContextStore();
         $store->set(TenantContext::fromResolution('tenant-acme', 'cli'));
 
-        // What Application::handleRequest() and the queue worker do first.
-        CoroutineLocal::beginRequest();
+        // What CoroutineLocal::beginRequest() does to this slot, first thing in
+        // Application::handleRequest() and the queue worker. Only this slot:
+        // the real call would empty every other fixture's state too.
+        CoroutineLocal::remove(DefaultTenantContextStore::CONTEXT_KEY);
 
         self::assertSame('tenant-acme', TenantContextAccess::tenantIdOrDefault($store->tryGet()));
         self::assertSame('tenant-acme', self::bareTenantId());
