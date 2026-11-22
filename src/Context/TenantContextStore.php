@@ -62,13 +62,6 @@ final class TenantContextStore implements ContextStoreInterface
             return $context instanceof TenantContextInterface ? $context : null;
         }
 
-        // Republish on read: CoroutineLocal::beginRequest() empties the slot
-        // while this tenant stays active, and a bare core store reading the
-        // slot must not answer 'default' from then on.
-        if (CoroutineLocal::get(self::CONTEXT_KEY) !== self::$fallback) {
-            self::publishFallback();
-        }
-
         return self::$fallback;
     }
 
@@ -94,7 +87,6 @@ final class TenantContextStore implements ContextStoreInterface
         }
 
         self::$fallback = $context;
-        self::publishFallback();
     }
 
     public function clear(): void
@@ -124,14 +116,12 @@ final class TenantContextStore implements ContextStoreInterface
         }
 
         self::$fallback = null;
-        self::publishFallback();
     }
 
     public function setFallback(TenantContextInterface $context): void
     {
         self::ensureRegistered();
         self::$fallback = $context;
-        self::publishFallback();
     }
 
     public function swapFallback(?TenantContextInterface $context): ?TenantContextInterface
@@ -139,34 +129,8 @@ final class TenantContextStore implements ContextStoreInterface
         self::ensureRegistered();
         $previous = self::$fallback;
         self::$fallback = $context;
-        self::publishFallback();
 
         return $previous;
-    }
-
-    /**
-     * Outside a coroutine, put the tenant where core's bare store reads it.
-     *
-     * The static above stays the truth for this class; the coroutine-local
-     * slot (its process-wide half, outside a coroutine) is a copy. Without
-     * it `tenant:run`, a queue worker or a scheduler run had a tenant here
-     * and none in a store built with `new DefaultTenantContextStore()`, so
-     * such a store filed one tenant's rows under 'default'. Inside a
-     * coroutine the slot belongs to the request and its lock: not touched.
-     */
-    private static function publishFallback(): void
-    {
-        if (class_exists(\Swoole\Coroutine::class, false) && \Swoole\Coroutine::getCid() > 0) {
-            return;
-        }
-
-        if (self::$fallback === null) {
-            CoroutineLocal::remove(self::CONTEXT_KEY);
-
-            return;
-        }
-
-        CoroutineLocal::set(self::CONTEXT_KEY, self::$fallback);
     }
 
     private function inCoroutine(): bool
@@ -208,11 +172,16 @@ final class TenantContextStore implements ContextStoreInterface
                 // and the next unit of work on this coroutine.
                 self::clearCurrent();
                 self::$fallback = null;
-                self::publishFallback();
             },
         );
         // Work run after the response (an Async handler) gets the request's tenant.
         CarriedContext::carry(self::CONTEXT_KEY, self::LOCK_KEY);
+        // Outside a coroutine (tenant:run, a queue job, a scheduler run) the
+        // tenant lives in the static above. A store built bare with
+        // `new DefaultTenantContextStore()` asks for it here; it gets no copy,
+        // because a copy outlived a reset run inside a coroutine and was
+        // emptied by CoroutineLocal::beginRequest() while the tenant was active.
+        DefaultTenantContextStore::readOutsideCoroutineFrom(static fn (): ?TenantContextInterface => self::$fallback);
 
         self::$registered = true;
     }
