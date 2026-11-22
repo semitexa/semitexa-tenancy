@@ -8,6 +8,7 @@ use Semitexa\Core\Attribute\SatisfiesServiceContract;
 use Semitexa\Core\Lifecycle\CarriedContext;
 use Semitexa\Core\Lifecycle\PerRequestStateRegistry;
 use Semitexa\Core\Support\CoroutineLocal;
+use Semitexa\Core\Tenant\DefaultTenantContextStore;
 use Semitexa\Core\Tenant\TenantContextInterface;
 use Semitexa\Core\Tenant\TenantContextStoreInterface;
 use Semitexa\Tenancy\Exception\TenantContextImmutableException;
@@ -16,7 +17,13 @@ use Semitexa\Tenancy\Exception\TenantRequiredException;
 #[SatisfiesServiceContract(of: TenantContextStoreInterface::class)]
 final class TenantContextStore implements ContextStoreInterface
 {
-    private const CONTEXT_KEY = 'semitexa.tenancy.tenant_context';
+    /**
+     * Core's key, not a copy of its text: a store built bare
+     * (`new DefaultTenantContextStore()`) reads this slot, and two strings
+     * that only happen to match are one rename away from every such caller
+     * answering 'default' while a tenant is active.
+     */
+    private const CONTEXT_KEY = DefaultTenantContextStore::CONTEXT_KEY;
     private const LOCK_KEY = 'semitexa.tenancy.tenant_context_locked';
     private const REGISTRY_NAME = 'tenant_context_store';
 
@@ -169,6 +176,12 @@ final class TenantContextStore implements ContextStoreInterface
         );
         // Work run after the response (an Async handler) gets the request's tenant.
         CarriedContext::carry(self::CONTEXT_KEY, self::LOCK_KEY);
+        // Outside a coroutine (tenant:run, a queue job, a scheduler run) the
+        // tenant lives in the static above. A store built bare with
+        // `new DefaultTenantContextStore()` asks for it here; it gets no copy,
+        // because a copy outlived a reset run inside a coroutine and was
+        // emptied by CoroutineLocal::beginRequest() while the tenant was active.
+        DefaultTenantContextStore::readOutsideCoroutineFrom(static fn (): ?TenantContextInterface => self::$fallback);
 
         self::$registered = true;
     }
